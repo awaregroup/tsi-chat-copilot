@@ -73,7 +73,6 @@ stages:
           yarn build --frozen-lockfile
         workingDirectory: '$(webAppFolder)'
         displayName: 'Web: Build web application'
-        workingDirectory: '$(webAppFolder)'
         env:
           BUILD_PATH: '$(frontendFolder)/wwwroot'
 
