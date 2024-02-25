@@ -136,7 +136,7 @@ stages:
 
       #public backend artifacts
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish: Frontend Artifacts'
+        displayName: 'Publish: Backend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
           artifactName: '$(artifactContainerName)'
