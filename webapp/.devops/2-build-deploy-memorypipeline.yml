@@ -38,6 +38,7 @@ stages:
     - checkout: self
       clean: false 
 
+    #set pipeline variables based on git hash and date
     - script: |
           set mydate=%date:~10,4%%date:~7,2%%date:~4,2%
           FOR /F "tokens=*" %%g IN ('git rev-parse --short HEAD') do (SET HASH=%%g)
@@ -61,7 +62,7 @@ stages:
         publishWebProjects: false
         command: 'custom'
         custom: 'publish'
-        #projects: 'CopilotChatMemoryPipeline.csproj'
+        projects: 'CopilotChatMemoryPipeline.csproj'
         workingDirectory: '$(memorypipelineFolder)'
         arguments: '--no-build --configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/$(OutputPrefix)-Backend"'
 
