@@ -4,9 +4,6 @@ trigger:
     - main
     - prod
 
-pr: none # Disable pull request triggers
-
-
 parameters:
   - name: environmentName
     type: string
@@ -34,16 +31,12 @@ stages:
       value: '20.x'
     - name: dotnetVersion
       value: '6.x'
-    - name: dotnetTargetFrameworkVersion
-      value: 'net6.0'
 
     jobs:
     - job: 'Frontend'
       displayName: '1. Build Frontend'
 
       pool:
-        # Run on Windows because the PS scripts used have Windows paths which cause issues when
-        # run on Linux, and we want to keep the scripts usable for local development
         vmImage: 'windows-latest'
 
       steps:
@@ -96,15 +89,12 @@ stages:
         displayName: 'Publish: Frontend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
-          artifactName: 'ChatCopilot-$(Build.BuildNumber)-$(Build.BuildId)-$(Build.SourceVersion)-Frontend'
-          publishLocation: 'Container'
+          artifactName: 'ChatCopilot-$(Build.SourceVersion)-Backend'
 
     - job: 'Backend'
       displayName: '2. Build Backend'
 
       pool:
-        # Run on Windows because the PS scripts used have Windows paths which cause issues when
-        # run on Linux, and we want to keep the scripts usable for local development
         vmImage: 'windows-latest'
 
       steps:
@@ -127,12 +117,11 @@ stages:
         inputs:
           command: 'publish'
           workingDirectory: '$(backendFolder)'
-          arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output"'
+          arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output/"'
 
       #public backend artifacts
       - task: PublishBuildArtifacts@1
         displayName: 'Publish: Backend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
-          artifactName: 'ChatCopilot-$(Build.BuildNumber)-$(Build.BuildId)-$(Build.SourceVersion)-Backend'
-          publishLocation: 'Container'
+          artifactName: 'ChatCopilot-$(Build.SourceVersion)-Backend'
