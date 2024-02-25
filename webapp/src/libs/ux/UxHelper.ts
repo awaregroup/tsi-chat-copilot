@@ -1,8 +1,7 @@
-import debug from 'debug';
-import { Constants } from '../../Constants';
-import { store } from '../../redux/app/store';
+// import debug from 'debug';
+// import { Constants } from '../../Constants';
 
-const log = debug(Constants.debug.root).extend('authHelper');
+// const log = debug(Constants.debug.root).extend('authHelper');
 
 export interface UxConfig {
     pageTitle: string;

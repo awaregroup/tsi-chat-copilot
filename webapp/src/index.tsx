@@ -38,6 +38,9 @@ export function renderApp() {
         .then((response) => (response.ok ? (response.json() as Promise<UxConfig>) : Promise.reject()))
         .then((uxConfig) => {
             store.dispatch(setUxConfig(uxConfig));
+        })
+        .catch(() => {
+            store.dispatch(setAuthConfig(undefined));
         });
 
     fetch(new URL('authConfig', BackendServiceUrl))
