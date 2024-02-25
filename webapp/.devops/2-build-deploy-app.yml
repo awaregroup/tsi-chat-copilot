@@ -50,23 +50,15 @@ stages:
         vmImage: 'windows-latest'
 
       steps:
+      #don't clean to cache the node_modules and potentially nuget packages
+      - checkout: self
+        clean: false 
 
       #install correct version of nodejs
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeJsVersion)
         displayName: 'Web: Install Node.js version $(nodeJsVersion)'
-
-      #enable yarn packages to cache between pipeline runs to reduce runtime
-      - task: Cache@2
-        displayName: 'Web: Enable yarn dependencies caching'
-        workingDirectory: '$(webAppFolder)'
-        inputs:
-          key: '"yarn" | "$(Agent.OS)" | yarn.lock'
-          restoreKeys: |
-            yarn | "$(Agent.OS)"
-            yarn
-          path: '$(webAppFolder)/node_modules'
 
       #install yarn packages
       - script: |
