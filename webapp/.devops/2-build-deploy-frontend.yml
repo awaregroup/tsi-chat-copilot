@@ -93,39 +93,37 @@ stages:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
           artifactName: '$(Build.BuildId)-$(Build.SourceVersion)-ChatCopilot-Frontend'
 
-    - job: 'Backend'
-      displayName: '2. Build Backend'
+  - stage: 'Deploy'
+    displayName: 'Deploy Projects'
+    condition: always()
 
-      pool:
-        vmImage: 'windows-latest'
+    jobs:
+    - job: 'Deploy'
+        displayName: '2. Deploy Frontend'
 
-      steps:
-      #don't clean to cache the node_modules and potentially nuget packages
-      - checkout: self
-        clean: false 
+        pool:
+          vmImage: 'windows-latest'
 
-      #install correct .net sdk version
-      - task: UseDotNet@2
-        inputs:
-          packageType: 'sdk'
-          version: '$(dotnetVersion)'
-          installationPath: $(Agent.ToolsDirectory)/dotnet
-          performMultiLevelLookup: true
-        displayName: '.NET: Install .NET $(dotnetVersion) SDK'
+        steps:
+        - checkout: none
 
-      #build project
-      - task: DotNetCoreCLI@2
-        displayName: '.NET: Build Backend Project'
-        inputs:
-          command: 'publish'
-          workingDirectory: '$(backendFolder)'
-          arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output/"'
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            buildType: 'current'
+            targetPath: '$(Pipeline.Workspace)'
 
-      - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/backend_output/'
+        - task: AzurePowerShell@5
+          inputs:
+            ScriptType: 'InlineScript'
+            Inline: |
+              $webapp = Get-AzResource -Tag @{"skweb"="1"} -ResourceGroupName '$(variables.RESOURCE_GROUP_NAME)'
+              Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webapp.Name"
+            preferredAzurePowerShellVersion: '3.1.0'
 
-      #public backend artifacts
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish: Backend Artifacts'
-        inputs:
-          pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
-          artifactName: '$(Build.BuildId)-$(Build.SourceVersion)-ChatCopilot-Backend'
+        - task: AzureRmWebAppDeployment@4
+          inputs:
+            ConnectionType: 'AzureRM'
+            appType: 'webApp'
+            WebAppName: '$(TargetResourceName)'
+            packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+            AppSettings: '-DEPLOY_FROM_PACKAGE 1'
