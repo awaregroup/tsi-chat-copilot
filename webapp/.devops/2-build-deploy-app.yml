@@ -128,4 +128,4 @@ stages:
         displayName: 'Publish: Backend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
-          artifactName: '$(Build.BuildId)-$(Build.SourceVersion)-ChatCopilot-Frontend'
+          artifactName: '$(Build.BuildId)-$(Build.SourceVersion)-ChatCopilot-Backend'
