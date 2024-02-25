@@ -64,13 +64,14 @@ stages:
 
       #install yarn packages
       - script: |
-          yarn --production --frozen-lockfile 
+          yarn --frozen-lockfile 
         workingDirectory: '$(webAppFolder)'
         displayName: 'Web: Install yarn dependencies'
 
       #build production build of web app
       - script: |
-          yarn build --production --frozen-lockfile
+          yarn build --frozen-lockfile
+        workingDirectory: '$(webAppFolder)'
         displayName: 'Web: Build web application'
         workingDirectory: '$(webAppFolder)'
         env:
