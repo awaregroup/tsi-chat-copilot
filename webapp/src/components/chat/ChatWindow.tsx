@@ -90,7 +90,7 @@ const useClasses = makeStyles({
 
 export const ChatWindow: React.FC = () => {
     const classes = useClasses();
-    const { features } = useAppSelector((state: RootState) => state.app);
+    const { features, uxConfig } = useAppSelector((state: RootState) => state.app);
     const { conversations, selectedId } = useAppSelector((state: RootState) => state.conversations);
     const showShareBotMenu = features[FeatureKeys.BotAsDocs].enabled || features[FeatureKeys.MultiUserChat].enabled;
     const chatName = conversations[selectedId].title;
@@ -105,7 +105,7 @@ export const ChatWindow: React.FC = () => {
         <div className={classes.root}>
             <div className={classes.header}>
                 <div className={classes.title}>
-                    {!features[FeatureKeys.SimplifiedExperience].enabled && (
+                    {!features[FeatureKeys.SimplifiedExperience].enabled && !uxConfig.chatHistoryVisible && (
                         <>
                             <Persona
                                 key={'Semantic Kernel Bot'}
@@ -149,27 +149,30 @@ export const ChatWindow: React.FC = () => {
                         <Tab data-testid="chatTab" id="chat" value="chat" aria-label="Chat Tab" title="Chat Tab">
                             Chat
                         </Tab>
-                        <Tab
-                            data-testid="documentsTab"
-                            id="documents"
-                            value="documents"
-                            aria-label="Documents Tab"
-                            title="Documents Tab"
-                        >
-                            Documents
-                        </Tab>
+                        {uxConfig.documentsTabVisible ?
+                            <Tab
+                                data-testid="documentsTab"
+                                id="documents"
+                                value="documents"
+                                aria-label="Documents Tab"
+                                title="Documents Tab"
+                            >
+                                Documents
+                            </Tab> : null}
+
                         {features[FeatureKeys.PluginsPlannersAndPersonas].enabled && (
                             <>
-                                <Tab
-                                    data-testid="plansTab"
-                                    id="plans"
-                                    value="plans"
-                                    icon={<Map16Regular />}
-                                    aria-label="Plans Tab"
-                                    title="Plans Tab"
-                                >
-                                    Plans
-                                </Tab>
+                                {uxConfig.plansTabVisible ?
+                                    <Tab
+                                        data-testid="plansTab"
+                                        id="plans"
+                                        value="plans"
+                                        icon={<Map16Regular />}
+                                        aria-label="Plans Tab"
+                                        title="Plans Tab"
+                                    >
+                                        Plans
+                                    </Tab> : null}
                                 <Tab
                                     data-testid="personaTab"
                                     id="persona"

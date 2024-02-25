@@ -221,12 +221,12 @@ const Chat = ({
             <div className={classes.header}>
                 <div className={classes.headerTitleContainer}>
                     <img className={classes.headerLogo} src={uxConfig.pageLogoUrl} alt={uxConfig.applicationName} />
-                    <Subtitle1 as="h1">{uxConfig.applicationName}</Subtitle1>
+                    {uxConfig.applicationNameVisible ? <Subtitle1 as="h1">{uxConfig.applicationName}</Subtitle1> : null}
                 </div>
                 {appState > AppState.SettingUserInfo && (
                     <div className={classes.cornerItems}>
                         <div className={classes.cornerItems}>
-                            <PluginGallery />
+                            {uxConfig.pluginGalleryVisible ? <PluginGallery /> : null}
                             <UserSettingsMenu
                                 setLoadingState={() => {
                                     setAppState(AppState.SigningOut);

@@ -50,7 +50,7 @@ export const useChat = () => {
     const dispatch = useAppDispatch();
     const { instance, inProgress } = useMsal();
     const { conversations } = useAppSelector((state: RootState) => state.conversations);
-    const { activeUserInfo, features } = useAppSelector((state: RootState) => state.app);
+    const { activeUserInfo, features, uxConfig } = useAppSelector((state: RootState) => state.app);
 
     const botService = new ChatArchiveService();
     const chatService = new ChatService();
@@ -73,7 +73,12 @@ export const useChat = () => {
     const { plugins } = useAppSelector((state: RootState) => state.plugins);
 
     const getChatUserById = (id: string, chatId: string, users: IChatUser[]) => {
-        if (id === `${chatId}-bot` || id.toLocaleLowerCase() === 'bot') return Constants.bot.profile;
+        if (id === `${chatId}-bot` || id.toLocaleLowerCase() === 'bot') {
+            const profile = Constants.bot.profile;
+            profile.fullName = uxConfig.copilotName;
+            if (uxConfig.copilotAvatarUrl) { profile.photo = uxConfig.copilotAvatarUrl; }
+            return profile;
+        }
         return users.find((user) => user.id === id);
     };
 
