@@ -84,12 +84,14 @@ stages:
           workingDirectory: '$(frontendFolder)'
           arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/frontend_output"'
 
+      - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/frontend_output/'
+
       #public frontend artifacts
       - task: PublishBuildArtifacts@1
         displayName: 'Publish: Frontend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
-          artifactName: 'ChatCopilot-$(Build.SourceVersion)-Backend'
+          artifactName: '$(Build.BuildId)-$(Build.SourceVersion)-ChatCopilot-Frontend'
 
     - job: 'Backend'
       displayName: '2. Build Backend'
@@ -119,9 +121,11 @@ stages:
           workingDirectory: '$(backendFolder)'
           arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output/"'
 
+      - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/backend_output/'
+
       #public backend artifacts
       - task: PublishBuildArtifacts@1
         displayName: 'Publish: Backend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
-          artifactName: 'ChatCopilot-$(Build.SourceVersion)-Backend'
+          artifactName: '$(Build.BuildId)-$(Build.SourceVersion)-ChatCopilot-Frontend'
