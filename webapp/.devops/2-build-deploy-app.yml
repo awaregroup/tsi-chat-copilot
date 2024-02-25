@@ -68,7 +68,7 @@ stages:
 
       #build production build of web app
       - script: |
-          yarn build --production
+          yarn build --production --frozen-lockfile
         workingDirectory: '$(webAppFolder)'
         displayName: 'Web: Build web application'
         env:
