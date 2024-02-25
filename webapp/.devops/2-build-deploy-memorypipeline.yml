@@ -78,7 +78,7 @@ stages:
 
 - stage: 'Deploy'
   displayName: 'Deploy Projects'
-  condition: success()
+  condition: succeeded()
 
   variables:
   - group: ${{ lower(parameters.environmentName) }}-variable-group
