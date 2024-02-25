@@ -33,6 +33,8 @@ stages:
       value: '$(Build.SourcesDirectory)/webapp'
     - name: frontendFolder
       value: '$(Build.SourcesDirectory)/webapi'
+    - name: backendFolder
+      value: '$(Build.SourcesDirectory)/memorypipeline'
     - name: nodeJsVersion
       value: '20.x'
     - name: dotnetVersion
@@ -69,8 +71,8 @@ stages:
       #build production build of web app
       - script: |
           yarn build --production --frozen-lockfile
-        workingDirectory: '$(webAppFolder)'
         displayName: 'Web: Build web application'
+        workingDirectory: '$(webAppFolder)'
         env:
           BUILD_PATH: '$(frontendFolder)/wwwroot'
 
@@ -83,19 +85,56 @@ stages:
           performMultiLevelLookup: true
         displayName: '.NET: Install .NET $(dotnetVersion) SDK'
 
-      #install correct .net sdk version
+      #build project
       - task: DotNetCoreCLI@2
         displayName: '.NET: Build Frontend Project'
         inputs:
           command: 'publish'
-          # publishWebProjects: true
           workingDirectory: '$(frontendFolder)'
-          arguments: '--configuration Release --output "$(Build.ArtifactStagingDirectory)/frontend_output"'
+          arguments: '--configuration Release -r win-x86 --self-contained true --output "$(Build.ArtifactStagingDirectory)/frontend_output"'
 
       #public frontend artifacts
       - task: PublishBuildArtifacts@1
         displayName: 'Publish: Frontend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
+          artifactName: '$(artifactContainerName)'
+          publishLocation: 'Container'
+
+    - job: 'Backend'
+      displayName: '2. Build Backend'
+
+      pool:
+        # Run on Windows because the PS scripts used have Windows paths which cause issues when
+        # run on Linux, and we want to keep the scripts usable for local development
+        vmImage: 'windows-latest'
+
+      steps:
+      #don't clean to cache the node_modules and potentially nuget packages
+      - checkout: self
+        clean: false 
+
+      #install correct .net sdk version
+      - task: UseDotNet@2
+        inputs:
+          packageType: 'sdk'
+          version: '$(dotnetVersion)'
+          installationPath: $(Agent.ToolsDirectory)/dotnet
+          performMultiLevelLookup: true
+        displayName: '.NET: Install .NET $(dotnetVersion) SDK'
+
+      #build project
+      - task: DotNetCoreCLI@2
+        displayName: '.NET: Build Backend Project'
+        inputs:
+          command: 'publish'
+          workingDirectory: '$(frontendFolder)'
+          arguments: '--configuration Release -r win-x86 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output"'
+
+      #public backend artifacts
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish: Frontend Artifacts'
+        inputs:
+          pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
           artifactName: '$(artifactContainerName)'
           publishLocation: 'Container'
