@@ -41,6 +41,8 @@ stages:
     - powershell: |
           $hash = git rev-parse --short HEAD
           $ts = Get-Date -Format "yyyyMMdd"
+          Write-Host "Setting variables..."
+          Write-Host "$ts-$hash"
           Write-Host "##vso[task.setvariable variable=ShortCommitHash;]$hash"            Write-Host "##vso[task.setvariable variable=OutputPrefix;]$ts-$hash"
       workingDirectory: '$(Build.SourcesDirectory)'
 
