@@ -1,0 +1,105 @@
+trigger:
+  branches:
+    include:
+    - main
+    - prod
+
+pr: none # Disable pull request triggers
+
+
+parameters:
+  - name: environmentName
+    type: string
+  - name: serviceConnectionName
+    type: string
+
+variables:
+- group: ${{ lower(parameters.environmentName) }}-variable-group
+- name: artifactContainerName
+  value: 'drop'
+- name: artifactName
+  value: 'CopilotWebApp-$(Build.BuildNumber)-$(Build.BuildId)-$(Build.SourceVersion).zip'
+
+stages:
+  - stage: 'Build Backend'
+
+    displayName: 'Build'
+
+    condition: always()
+
+    variables:
+    - group: ${{ lower(parameters.environmentName) }}-variable-group
+    - name: webAppFolder
+      value: '$(Pipeline.Workspace)/webapp'
+    - name: frontendFolder
+      value: '$(Pipeline.Workspace)/webapi'
+    - name: nodeJsVersion
+      value: '20.x'
+    - name: dotnetVersion
+      value: '6.x'
+    - name: dotnetTargetFrameworkVersion
+      value: 'net6.0'
+
+    jobs:
+    - job: Build Frontend
+
+      pool:
+        # Run on Windows because the PS scripts used have Windows paths which cause issues when
+        # run on Linux, and we want to keep the scripts usable for local development
+        vmImage: 'windows-latest'
+
+      steps:
+
+      #install correct version of nodejs
+      - task: NodeTool@0
+        inputs:
+          versionSpec: $(nodeJsVersion)
+        displayName: 'Web: Install Node.js version $(nodeJsVersion)'
+
+      #enable yarn packages to cache between pipeline runs to reduce runtime
+      - task: Cache@2
+        displayName: 'Web: Enable yarn dependencies caching'
+        inputs:
+          key: '"yarn" | "$(Agent.OS)" | yarn.lock'
+          restoreKeys: |
+            yarn | "$(Agent.OS)"
+            yarn
+          path: '$(webAppFolder)/.yarn'
+
+      #install yarn packages
+      - script: |
+          yarn --frozen-lockfile
+        workingDirectory: '$(webAppFolder)'
+        displayName: 'Web: Install yarn dependencies'
+
+      #build production build of web app
+      - script: |
+          yarn build ../webapi/wwwroot
+        workingDirectory: '$(webAppFolder)'
+        displayName: 'Web: Build web application'
+
+      #install correct .net sdk version
+      - task: UseDotNet@2
+        inputs:
+          packageType: 'sdk'
+          version: '$(dotnetVersion)'
+          installationPath: $(Agent.ToolsDirectory)/dotnet
+          performMultiLevelLookup: true
+        displayName: '.NET: Install .NET $(dotnetVersion) SDK'
+
+      #install correct .net sdk version
+      - task: DotNetCoreCLI@2
+        displayName: '.NET: Build Frontend Project'
+        inputs:
+          command: 'publish'
+          # publishWebProjects: true
+          workingDirectory: '$(frontendFolder)'
+          arguments: '--configuration Release --output "$(Build.ArtifactStagingDirectory)/frontend_output"'
+
+      #public frontend artifacts
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Frontend Artifacts'
+        inputs:
+          pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
+          artifactName: '$(artifactContainerName)'
+          publishLocation: 'Container'
