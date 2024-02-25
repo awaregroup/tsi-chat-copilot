@@ -109,6 +109,7 @@ public class ServiceInfoController : ControllerBase
     [Route("uxConfig")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [AllowAnonymous]
     public IActionResult GetUserExperienceConfig()
     {
         var response = new FrontendUxConfig()

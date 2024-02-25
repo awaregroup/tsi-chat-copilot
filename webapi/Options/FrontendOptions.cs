@@ -19,7 +19,7 @@ public sealed class FrontendOptions
     /// Override the default page titles and behaviour
     /// </summary>
     public string PageTitle { get; set; } = "Enterprise Copilot";
-    public string ApplicationName { get; set; } = "Copilot Chat";
+    public string ApplicationName { get; set; } = "Chat Copilot";
     public bool ApplicationNameVisible { get; set; } = true;
     public string CopilotName { get; set; } = "Copilot";
 

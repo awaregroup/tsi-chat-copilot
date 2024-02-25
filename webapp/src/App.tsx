@@ -16,6 +16,7 @@ import { RootState } from './redux/app/store';
 import { FeatureKeys } from './redux/features/app/AppState';
 import { addAlert, setActiveUserInfo, setServiceInfo } from './redux/features/app/appSlice';
 import { semanticKernelDarkTheme, semanticKernelLightTheme } from './styles';
+import { UxConfig } from './libs/ux/UxHelper';
 
 export const useClasses = makeStyles({
     container: {
@@ -37,6 +38,17 @@ export const useClasses = makeStyles({
         height: '48px',
         justifyContent: 'space-between',
         width: '100%',
+    },
+    headerTitleContainer: {
+        display: 'flex',
+        alignItems: 'left',
+        marginTop: '-5px',
+        paddingLeft: tokens.spacingVerticalSNudge
+    },
+    headerLogo: {
+        height: '95%',
+        display: 'flex',
+        marginTop: '10px',
     },
     persona: {
         marginRight: tokens.spacingHorizontalXXL,
@@ -64,7 +76,7 @@ const App = () => {
     const dispatch = useAppDispatch();
 
     const { instance, inProgress } = useMsal();
-    const { features, isMaintenance } = useAppSelector((state: RootState) => state.app);
+    const { features, isMaintenance, uxConfig } = useAppSelector((state: RootState) => state.app);
     const isAuthenticated = useIsAuthenticated();
 
     const chat = useChat();
@@ -131,7 +143,34 @@ const App = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [instance, inProgress, isAuthenticated, appState, isMaintenance]);
 
-    const content = <Chat classes={classes} appState={appState} setAppState={setAppState} />;
+    useEffect(() => {
+        //web page title
+        if (uxConfig.pageTitle) {
+            document.title = uxConfig.pageTitle;
+        }
+
+        //favicon
+        if (uxConfig.faviconUrl) {
+            let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+
+            link.href = uxConfig.faviconUrl;
+        }
+
+        //brand colors
+        if (uxConfig.primaryColor) {
+            semanticKernelLightTheme.colorBrandForeground1 = uxConfig.primaryColor;
+            semanticKernelLightTheme.colorBrandForeground2 = uxConfig.primaryColor;
+            semanticKernelDarkTheme.colorBrandForeground1 = uxConfig.primaryColor;
+            semanticKernelDarkTheme.colorBrandForeground2 = uxConfig.primaryColor;
+        }
+    }, [uxConfig]);
+
+    const content = <Chat classes={classes} appState={appState} setAppState={setAppState} uxConfig={uxConfig} />;
     return (
         <FluentProvider
             className="app-container"
@@ -142,7 +181,7 @@ const App = () => {
                     <UnauthenticatedTemplate>
                         <div className={classes.container}>
                             <div className={classes.header}>
-                                <Subtitle1 as="h1">Chat Copilot</Subtitle1>
+                                <Subtitle1 as="h1">{uxConfig.applicationName}</Subtitle1>
                             </div>
                             {appState === AppState.SigningOut && <Loading text="Signing you out..." />}
                             {appState !== AppState.SigningOut && <Login />}
@@ -161,24 +200,29 @@ const Chat = ({
     classes,
     appState,
     setAppState,
+    uxConfig
 }: {
     classes: ReturnType<typeof useClasses>;
     appState: AppState;
     setAppState: (state: AppState) => void;
+    uxConfig: UxConfig;
 }) => {
     const onBackendFound = React.useCallback(() => {
         setAppState(
             AuthHelper.isAuthAAD()
                 ? // if AAD is enabled, we need to set the active account before loading chats
-                  AppState.SettingUserInfo
+                AppState.SettingUserInfo
                 : // otherwise, we can load chats immediately
-                  AppState.LoadingChats,
+                AppState.LoadingChats,
         );
     }, [setAppState]);
     return (
         <div className={classes.container}>
             <div className={classes.header}>
-                <Subtitle1 as="h1">Chat Copilot</Subtitle1>
+                <div className={classes.headerTitleContainer}>
+                    <img className={classes.headerLogo} src={uxConfig.pageLogoUrl} alt={uxConfig.applicationName} />
+                    <Subtitle1 as="h1">{uxConfig.applicationName}</Subtitle1>
+                </div>
                 {appState > AppState.SettingUserInfo && (
                     <div className={classes.cornerItems}>
                         <div className={classes.cornerItems}>
