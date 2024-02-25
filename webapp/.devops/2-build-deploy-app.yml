@@ -30,9 +30,9 @@ stages:
     variables:
     - group: ${{ lower(parameters.environmentName) }}-variable-group
     - name: webAppFolder
-      value: '$(Pipeline.Workspace)/webapp'
+      value: '$(Build.SourcesDirectory)/webapp'
     - name: frontendFolder
-      value: '$(Pipeline.Workspace)/webapi'
+      value: '$(Build.SourcesDirectory)/webapi'
     - name: nodeJsVersion
       value: '20.x'
     - name: dotnetVersion
