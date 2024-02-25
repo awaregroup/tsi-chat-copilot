@@ -61,8 +61,8 @@ stages:
         publishWebProjects: false
         command: 'custom'
         custom: 'publish'
-        projects: 'CopilotChatMemoryPipeline.csproj'
-        workingDirectory: '$(backendFolder)'
+        #projects: 'CopilotChatMemoryPipeline.csproj'
+        workingDirectory: '$(memorypipelineFolder)'
         arguments: '--no-build --configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/$(OutputPrefix)-Backend"'
 
     - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/'
