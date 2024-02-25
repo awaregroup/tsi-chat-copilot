@@ -75,6 +75,9 @@ stages:
         displayName: 'Web: Build web application'
         env:
           BUILD_PATH: '$(frontendFolder)/wwwroot'
+          REACT_APP_BACKEND_URI: ''
+          REACT_APP_SK_VERSION: '$(Build.SourceVersion)'
+          REACT_APP_SK_BUILD_INFO: '$(Build.BuildNumber)'
 
       #install correct .net sdk version
       - task: UseDotNet@2
@@ -91,7 +94,7 @@ stages:
         inputs:
           command: 'publish'
           workingDirectory: '$(frontendFolder)'
-          arguments: '--configuration Release -r win-x86 --self-contained true --output "$(Build.ArtifactStagingDirectory)/frontend_output"'
+          arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/frontend_output"'
 
       #public frontend artifacts
       - task: PublishBuildArtifacts@1
@@ -129,7 +132,7 @@ stages:
         inputs:
           command: 'publish'
           workingDirectory: '$(frontendFolder)'
-          arguments: '--configuration Release -r win-x86 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output"'
+          arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output"'
 
       #public backend artifacts
       - task: PublishBuildArtifacts@1
