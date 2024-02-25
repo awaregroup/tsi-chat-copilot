@@ -62,15 +62,17 @@ stages:
 
       #install yarn packages
       - script: |
-          yarn --frozen-lockfile
+          yarn --production --frozen-lockfile 
         workingDirectory: '$(webAppFolder)'
         displayName: 'Web: Install yarn dependencies'
 
       #build production build of web app
       - script: |
-          yarn build ../webapi/wwwroot
+          yarn build --production
         workingDirectory: '$(webAppFolder)'
         displayName: 'Web: Build web application'
+        env:
+          BUILD_PATH: '$(frontendFolder)/wwwroot'
 
       #install correct .net sdk version
       - task: UseDotNet@2
@@ -92,7 +94,7 @@ stages:
 
       #public frontend artifacts
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish Frontend Artifacts'
+        displayName: 'Publish: Frontend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
           artifactName: '$(artifactContainerName)'
