@@ -57,18 +57,19 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: '.NET: Build Backend Project'
       inputs:
-        command: 'publish'
+        command: 'custom'
+        custom: 'publish'
         workingDirectory: '$(backendFolder)'
-        arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output/"'
+        arguments: '--no-build --configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/$(OutputPrefix)-Backend"'
 
-    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/backend_output/'
+    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/'
 
     #public memorypipeline artifacts
     - task: PublishBuildArtifacts@1
       displayName: 'Publish: Backend Artifacts'
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
-        artifactName: '$(OutputPrefix)-Backend'
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/'
+        artifactName: 'drop'
 
 
 - stage: 'Deploy'
