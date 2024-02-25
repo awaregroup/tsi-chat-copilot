@@ -103,6 +103,36 @@ public class ServiceInfoController : ControllerBase
         return this.Ok(config);
     }
 
+    /// <summary>
+    /// Return information on running service.
+    /// </summary>
+    [Route("uxConfig")]
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult GetUserExperienceConfig()
+    {
+        var response = new FrontendUxConfig()
+        {
+            PageTitle = this._frontendOptions.PageTitle,
+            ApplicationName = this._frontendOptions.ApplicationName,
+            ApplicationNameVisible = this._frontendOptions.ApplicationNameVisible,
+            CopilotName = this._frontendOptions.CopilotName,
+            PrimaryColor = this._frontendOptions.PrimaryColor,
+            SecondaryColor = this._frontendOptions.SecondaryColor,
+            PageLogoUrl = this._frontendOptions.PageLogoUrl,
+            FaviconUrl = this._frontendOptions.FaviconUrl,
+            CopilotAvatarUrl = this._frontendOptions.CopilotAvatarUrl,
+            EnglishProficiencyEnabled = this._frontendOptions.EnglishProficiencyEnabled,
+            EnglishProficiencyDefaultLevel = this._frontendOptions.EnglishProficiencyDefaultLevel,
+            DocumentsTabVisible = this._frontendOptions.DocumentsTabVisible,
+            GlobalDocumentsVisible = this._frontendOptions.GlobalDocumentsVisible,
+            PlansTabVisible = this._frontendOptions.PlansTabVisible,
+            ChatHistoryVisible = this._frontendOptions.ChatHistoryVisible
+        };
+
+        return this.Ok(response);
+    }
+
     private static string GetAssemblyFileVersion()
     {
         Assembly assembly = Assembly.GetExecutingAssembly();
