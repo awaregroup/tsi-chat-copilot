@@ -15,10 +15,6 @@ parameters:
 
 variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
-- name: artifactContainerName
-  value: 'drop'
-- name: artifactName
-  value: 'CopilotWebApp-$(Build.BuildNumber)-$(Build.BuildId)-$(Build.SourceVersion).zip'
 
 stages:
   - stage: 'Build'
@@ -28,7 +24,6 @@ stages:
     condition: always()
 
     variables:
-    - group: ${{ lower(parameters.environmentName) }}-variable-group
     - name: webAppFolder
       value: '$(Build.SourcesDirectory)/webapp'
     - name: frontendFolder
@@ -101,7 +96,7 @@ stages:
         displayName: 'Publish: Frontend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
-          artifactName: '$(artifactContainerName)'
+          artifactName: 'ChatCopilot-$(Build.BuildNumber)-$(Build.BuildId)-$(Build.SourceVersion)-Frontend'
           publishLocation: 'Container'
 
     - job: 'Backend'
@@ -139,5 +134,5 @@ stages:
         displayName: 'Publish: Backend Artifacts'
         inputs:
           pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
-          artifactName: '$(artifactContainerName)'
+          artifactName: 'ChatCopilot-$(Build.BuildNumber)-$(Build.BuildId)-$(Build.SourceVersion)-Backend'
           publishLocation: 'Container'
