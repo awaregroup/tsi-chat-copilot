@@ -53,4 +53,5 @@ public sealed class FrontendOptions
     public bool GlobalDocumentsVisible { get; set; } = true;
     public bool PlansTabVisible { get; set; } = true;
     public bool ChatHistoryVisible { get; set; } = true;
+    public bool PluginGalleryVisible { get; set; } = true;
 }

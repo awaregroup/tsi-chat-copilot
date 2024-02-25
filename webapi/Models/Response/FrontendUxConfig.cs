@@ -69,4 +69,7 @@ public class FrontendUxConfig
 
     [JsonPropertyName("chatHistoryVisible")]
     public bool ChatHistoryVisible { get; set; }
+
+    [JsonPropertyName("pluginGalleryVisible")]
+    public bool PluginGalleryVisible { get; set; }
 }
