@@ -126,7 +126,7 @@ stages:
         displayName: '.NET: Build Backend Project'
         inputs:
           command: 'publish'
-          workingDirectory: '$(frontendFolder)'
+          workingDirectory: '$(backendFolder)'
           arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output"'
 
       #public backend artifacts
