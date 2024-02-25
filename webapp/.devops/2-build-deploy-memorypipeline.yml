@@ -62,7 +62,7 @@ stages:
         publishWebProjects: false
         command: 'custom'
         custom: 'publish'
-        projects: 'CopilotChatMemoryPipeline.csproj'
+        projects: '$(memorypipelineFolder)/CopilotChatMemoryPipeline.csproj'
         workingDirectory: '$(memorypipelineFolder)'
         arguments: '--no-build --configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/$(OutputPrefix)-Backend"'
 
@@ -78,7 +78,10 @@ stages:
 
 - stage: 'Deploy'
   displayName: 'Deploy Projects'
-  condition: always()
+  condition: success()
+
+  variables:
+  - group: ${{ lower(parameters.environmentName) }}-variable-group
 
   jobs:
   - job: 'Deploy'
