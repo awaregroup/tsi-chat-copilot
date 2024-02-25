@@ -21,9 +21,9 @@ variables:
   value: 'CopilotWebApp-$(Build.BuildNumber)-$(Build.BuildId)-$(Build.SourceVersion).zip'
 
 stages:
-  - stage: 'Build Backend'
+  - stage: 'Build'
 
-    displayName: 'Build'
+    displayName: 'Build Projects'
 
     condition: always()
 
@@ -41,7 +41,8 @@ stages:
       value: 'net6.0'
 
     jobs:
-    - job: Build Frontend
+    - job: 'Frontend'
+      displayName: '1. Frontend'
 
       pool:
         # Run on Windows because the PS scripts used have Windows paths which cause issues when
