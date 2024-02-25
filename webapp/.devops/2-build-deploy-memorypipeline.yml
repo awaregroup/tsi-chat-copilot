@@ -14,94 +14,95 @@ variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
 
 stages:
-  - stage: 'Build'
+- stage: 'Build'
 
-    displayName: 'Build Projects'
+  displayName: 'Build Projects'
 
-    condition: always()
+  condition: always()
 
-    variables:
-    - name: memorypipelineFolder
-      value: '$(Build.SourcesDirectory)/memorypipeline'
-    - name: dotnetVersion
-      value: '6.x'
+  variables:
+  - name: memorypipelineFolder
+    value: '$(Build.SourcesDirectory)/memorypipeline'
+  - name: dotnetVersion
+    value: '6.x'
 
-    jobs:
-    - job: 'Build'
-      displayName: '1. Build MemoryPipeline'
+  jobs:
+  - job: 'Build'
+    displayName: '1. Build MemoryPipeline'
 
-      pool:
-        vmImage: 'windows-latest'
+    pool:
+      vmImage: 'windows-latest'
 
-      steps:
-      #don't clean to cache the node_modules and potentially nuget packages
-      - checkout: self
-        clean: false 
+    steps:
+    #don't clean to cache the node_modules and potentially nuget packages
+    - checkout: self
+      clean: false 
 
-      - powershell: |
-            $hash = git rev-parse --short HEAD
-            $ts = Get-Date -Format "yyyyMMdd"
-            Write-Host "##vso[task.setvariable variable=ShortCommitHash;]$hash"            Write-Host "##vso[task.setvariable variable=OutputPrefix;]$ts-$hash"
-        workingDirectory: '$(Build.SourcesDirectory)'
+    - powershell: |
+          $hash = git rev-parse --short HEAD
+          $ts = Get-Date -Format "yyyyMMdd"
+          Write-Host "##vso[task.setvariable variable=ShortCommitHash;]$hash"            Write-Host "##vso[task.setvariable variable=OutputPrefix;]$ts-$hash"
+      workingDirectory: '$(Build.SourcesDirectory)'
 
-      #install correct .net sdk version
-      - task: UseDotNet@2
-        inputs:
-          packageType: 'sdk'
-          version: '$(dotnetVersion)'
-          installationPath: $(Agent.ToolsDirectory)/dotnet
-          performMultiLevelLookup: true
-        displayName: '.NET: Install .NET $(dotnetVersion) SDK'
+    #install correct .net sdk version
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '$(dotnetVersion)'
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+        performMultiLevelLookup: true
+      displayName: '.NET: Install .NET $(dotnetVersion) SDK'
 
-      #build project
-      - task: DotNetCoreCLI@2
-        displayName: '.NET: Build Backend Project'
-        inputs:
-          command: 'publish'
-          workingDirectory: '$(backendFolder)'
-          arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output/"'
+    #build project
+    - task: DotNetCoreCLI@2
+      displayName: '.NET: Build Backend Project'
+      inputs:
+        command: 'publish'
+        workingDirectory: '$(backendFolder)'
+        arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/backend_output/"'
 
-      - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/backend_output/'
+    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/backend_output/'
 
-      #public memorypipeline artifacts
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish: Backend Artifacts'
-        inputs:
-          pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
-          artifactName: '$(OutputPrefix)-Backend'
+    #public memorypipeline artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish: Backend Artifacts'
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/backend_output'
+        artifactName: '$(OutputPrefix)-Backend'
 
 
-  - stage: 'Deploy'
-    displayName: 'Deploy Projects'
-    condition: always()
+- stage: 'Deploy'
+  displayName: 'Deploy Projects'
+  condition: always()
 
-    jobs:
-    - job: 'Deploy'
-        displayName: '2. Deploy MemoryPipeline'
+  jobs:
+  - job: 'Deploy'
+    displayName: '2. Deploy MemoryPipeline'
 
-        pool:
-          vmImage: 'windows-latest'
+    pool:
+      vmImage: 'windows-latest'
 
-        steps:
-        - checkout: none
+    steps:
+    - checkout: none
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            buildType: 'current'
-            targetPath: '$(Pipeline.Workspace)'
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        targetPath: '$(Pipeline.Workspace)'
 
-        - task: AzurePowerShell@5
-          inputs:
-            ScriptType: 'InlineScript'
-            Inline: |
-              $webapp = Get-AzResource -Tag @{"skmemorypipeline"="1"} -ResourceGroupName '$(variables.RESOURCE_GROUP_NAME)'
-              Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webapp.Name"
-            preferredAzurePowerShellVersion: '3.1.0'
+    - task: AzurePowerShell@5
+      inputs:
+        azureSubscription: ${{parameters.serviceConnectionName}}
+        ScriptType: 'InlineScript'
+        Inline: |
+          $webapp = Get-AzResource -Tag @{"skmemorypipeline"="1"} -ResourceGroupName '$(variables.RESOURCE_GROUP_NAME)'
+          Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webapp.Name"
+        preferredAzurePowerShellVersion: '3.1.0'
 
-        - task: AzureRmWebAppDeployment@4
-          inputs:
-            ConnectionType: 'AzureRM'
-            appType: 'webApp'
-            WebAppName: '$(TargetResourceName)'
-            packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
-            AppSettings: '-DEPLOY_FROM_PACKAGE 1'
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        appType: 'webApp'
+        WebAppName: '$(TargetResourceName)'
+        packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+        AppSettings: '-DEPLOY_FROM_PACKAGE 1'
