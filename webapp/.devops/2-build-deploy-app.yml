@@ -42,7 +42,7 @@ stages:
 
     jobs:
     - job: 'Frontend'
-      displayName: '1. Frontend'
+      displayName: '1. Build Frontend'
 
       pool:
         # Run on Windows because the PS scripts used have Windows paths which cause issues when
@@ -60,12 +60,13 @@ stages:
       #enable yarn packages to cache between pipeline runs to reduce runtime
       - task: Cache@2
         displayName: 'Web: Enable yarn dependencies caching'
+        workingDirectory: '$(webAppFolder)'
         inputs:
           key: '"yarn" | "$(Agent.OS)" | yarn.lock'
           restoreKeys: |
             yarn | "$(Agent.OS)"
             yarn
-          path: '$(webAppFolder)/.yarn'
+          path: '$(webAppFolder)/node_modules'
 
       #install yarn packages
       - script: |
