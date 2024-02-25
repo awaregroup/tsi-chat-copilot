@@ -10,7 +10,8 @@ import { store } from './redux/app/store';
 
 import React from 'react';
 import { BackendServiceUrl } from './libs/services/BaseService';
-import { setAuthConfig } from './redux/features/app/appSlice';
+import { setAuthConfig, setUxConfig } from './redux/features/app/appSlice';
+import { UxConfig } from './libs/ux/UxHelper';
 
 if (!localStorage.getItem('debug')) {
     localStorage.setItem('debug', `${Constants.debug.root}:*`);
@@ -33,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 export function renderApp() {
+    fetch(new URL('uxConfig', BackendServiceUrl))
+        .then((response) => (response.ok ? (response.json() as Promise<UxConfig>) : Promise.reject()))
+        .then((uxConfig) => {
+            store.dispatch(setUxConfig(uxConfig));
+        });
+
     fetch(new URL('authConfig', BackendServiceUrl))
         .then((response) => (response.ok ? (response.json() as Promise<AuthConfig>) : Promise.reject()))
         .then((authConfig) => {

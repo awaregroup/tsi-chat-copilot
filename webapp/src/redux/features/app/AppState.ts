@@ -5,6 +5,7 @@ import { AlertType } from '../../../libs/models/AlertType';
 import { IChatUser } from '../../../libs/models/ChatUser';
 import { ServiceInfo } from '../../../libs/models/ServiceInfo';
 import { TokenUsage } from '../../../libs/models/TokenUsage';
+import { UxConfig } from '../../../libs/ux/UxHelper';
 
 // This is the default user information when authentication is set to 'None'.
 // It must match what is defined in PassthroughAuthenticationHandler.cs on the backend.
@@ -59,6 +60,7 @@ export interface AppState {
     settings: Setting[];
     serviceInfo: ServiceInfo;
     isMaintenance: boolean;
+    uxConfig: UxConfig;
 }
 
 export enum FeatureKeys {
@@ -141,6 +143,7 @@ export const initialState: AppState = {
     alerts: [],
     activeUserInfo: DefaultActiveUserInfo,
     authConfig: {} as AuthConfig,
+    uxConfig: {} as UxConfig,
     tokenUsage: {},
     features: Features,
     settings: Settings,
