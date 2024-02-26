@@ -33,7 +33,7 @@ stages:
   - job: 'Build'
     displayName: 'Build: ${{ variables.applicationRole }}'
 
-    pool: '$(poolName)'
+    pool: '${{parameters.poolName}}'
       #vmImage: '$(poolName)'
 
     steps:
@@ -130,7 +130,7 @@ stages:
   - job: 'Deploy'
     displayName: 'Deploy: ${{ variables.applicationRole }}'
 
-    pool: '$(poolName)'
+    pool: '${{parameters.poolName}}'
 
     steps:
     - checkout: none
