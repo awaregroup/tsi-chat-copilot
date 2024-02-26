@@ -15,9 +15,7 @@ variables:
 
 stages:
 - stage: 'Build'
-
   displayName: 'Build Projects'
-
   condition: always()
 
   variables:
@@ -41,30 +39,28 @@ stages:
     #set pipeline variables based on git hash and date
     - script: |
           set mydate=%date:~10,4%%date:~7,2%%date:~4,2%
-          FOR /F "tokens=*" %%g IN ('git rev-parse --short HEAD') do (SET HASH=%%g)
-          echo "##vso[task.setvariable variable=ShortCommitHash;]%HASH%"
-          echo "##vso[task.setvariable variable=OutputPrefix;]%mydate%-%HASH%"
+          for /F "tokens=*" %%g in ('git rev-parse --short HEAD') do (set hash=%%g)
+          echo "##vso[task.setvariable variable=ShortCommitHash;]%hash%"
+          echo "##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%"
       workingDirectory: '$(Build.SourcesDirectory)'
 
     #install correct .net sdk version
     - task: UseDotNet@2
+      displayName: '.NET: Install .NET $(dotnetVersion) SDK'
       inputs:
         packageType: 'sdk'
         version: '$(dotnetVersion)'
-        installationPath: $(Agent.ToolsDirectory)/dotnet
-        performMultiLevelLookup: true
-      displayName: '.NET: Install .NET $(dotnetVersion) SDK'
 
     #build project
     - task: DotNetCoreCLI@2
       displayName: '.NET: Build Backend Project'
       inputs:
-        publishWebProjects: false
-        command: 'custom'
-        custom: 'publish'
+        command: 'build'
         projects: '$(memorypipelineFolder)/CopilotChatMemoryPipeline.csproj'
         workingDirectory: '$(memorypipelineFolder)'
         arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/$(OutputPrefix)-Backend"'
+        publishWebProjects: false
+        zipAfterPublish: false
 
     - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/'
 
