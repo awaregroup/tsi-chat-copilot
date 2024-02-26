@@ -220,7 +220,8 @@ const Chat = ({
         <div className={classes.container}>
             <div className={classes.header}>
                 <div className={classes.headerTitleContainer}>
-                    <img className={classes.headerLogo} src={uxConfig.pageLogoUrl} alt={uxConfig.applicationName} />
+                    {uxConfig.pageLogoUrl ? <img className={classes.headerLogo} src={uxConfig.pageLogoUrl} alt={uxConfig.applicationName} /> : null}
+                    
                     {uxConfig.applicationNameVisible ? <Subtitle1 as="h1">{uxConfig.applicationName}</Subtitle1> : null}
                 </div>
                 {appState > AppState.SettingUserInfo && (
