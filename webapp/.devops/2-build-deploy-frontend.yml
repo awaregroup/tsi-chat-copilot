@@ -26,6 +26,8 @@ stages:
     value: '$(Build.SourcesDirectory)/webapp'
   - name: dotnetVersion
     value: '6.x'
+  - name: nodeJsVersion
+    value: '20.x'
 
   jobs:
   - job: 'Build'
@@ -54,7 +56,7 @@ stages:
     - task: NodeTool@0
       inputs:
         versionSpec: $(nodeJsVersion)
-      displayName: 'Web: Install Node.js version $(nodeJsVersion)'
+      displayName: 'Install Node.js version $(nodeJsVersion)'
 
     #install yarn packages
     - script: |
