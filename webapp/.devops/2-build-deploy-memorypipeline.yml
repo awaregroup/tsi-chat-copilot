@@ -79,7 +79,7 @@ stages:
         replaceExistingArchive: true
         verbose: true
 
-    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/'
+    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/' -Recurse
 
     #publish artifacts
     - task: PublishBuildArtifacts@1
