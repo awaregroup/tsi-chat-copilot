@@ -9,6 +9,9 @@ parameters:
     type: string
   - name: serviceConnectionName
     type: string
+  - name: poolName
+    type: string
+    
 
 variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
