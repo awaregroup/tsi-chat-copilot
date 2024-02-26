@@ -23,10 +23,14 @@ stages:
   condition: always()
 
   variables:
+  - name: sourcePath
+    value: webapi
   - name: sourceFolder
-    value: '$(Build.SourcesDirectory)/webapi'
+    value: '$(Build.SourcesDirectory)/$(sourcePath)'
+  - name: webAppPath
+    value: webapp
   - name: webAppFolder
-    value: '$(Build.SourcesDirectory)/webapp'
+    value: '$(Build.SourcesDirectory)/$(webAppPath)'
   - name: dotnetVersion
     value: '6.x'
   - name: nodeJsVersion
@@ -99,19 +103,12 @@ stages:
         publishWebProjects: false
         zipAfterPublish: false
 
-    - task: CopyFiles@2
-      inputs:
-        SourceFolder: '$(sourceFolder)/wwwroot'
-        Contents: '**'
-        TargetFolder: '$(ArtifactDir)/wwwroot'
-        OverWrite: true
-
     #we use build rather than publish above to give more flexibility on the output archive name
     #now we build the archive
     - task: ArchiveFiles@2
       displayName: 'Create artifact ZIP file'
       inputs:
-        rootFolderOrFile: '$(ArtifactDir)'
+        rootFolderOrFile: '$(ArtifactDir)/$(sourcePath)'
         includeRootFolder: false
         archiveType: 'zip'
         archiveFile: '$(ArtifactArchive)'
