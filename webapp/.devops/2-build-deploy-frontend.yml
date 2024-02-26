@@ -9,8 +9,6 @@ parameters:
     type: string
   - name: serviceConnectionName
     type: string
-  - name: poolName
-    type: string
     
 
 variables:
@@ -40,8 +38,8 @@ stages:
   - job: 'Build'
     displayName: 'Build: ${{ variables.applicationRole }}'
 
-    pool: '${{parameters.poolName}}'
-      #vmImage: '$(poolName)'
+    pool:
+      vmImage: 'windows-latest'
 
     steps:
     #don't clean to cache the node_modules and potentially nuget packages
@@ -64,8 +62,6 @@ stages:
       inputs:
         versionSpec: $(nodeJsVersion)
       displayName: 'Install Node.js version $(nodeJsVersion)'
-
-    - script: npm install -g yarn react-scripts
 
     #install yarn packages
     - script: |
@@ -92,7 +88,6 @@ stages:
         version: '$(dotnetVersion)'
 
     #build project
-    
     - task: DotNetCoreCLI@2
       displayName: 'Build $(applicationRole) project'
       inputs:
@@ -132,7 +127,8 @@ stages:
   - job: 'Deploy'
     displayName: 'Deploy: ${{ variables.applicationRole }}'
 
-    pool: '${{parameters.poolName}}'
+    pool:
+      vmImage: 'windows-latest'
 
     steps:
     - checkout: none
@@ -142,7 +138,6 @@ stages:
         buildType: 'current'
         targetPath: '$(Pipeline.Workspace)'
 
-    - powershell: Install-Module -Name Az -Repository PSGallery -Force
     - task: AzurePowerShell@5
       displayName: 'Find $(applicationRole) resource name'
       inputs:
