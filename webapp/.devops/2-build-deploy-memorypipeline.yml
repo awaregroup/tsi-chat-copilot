@@ -9,6 +9,8 @@ parameters:
     type: string
   - name: serviceConnectionName
     type: string
+  - name: poolName
+    type: string
 
 variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
@@ -29,8 +31,9 @@ stages:
   - job: 'Build'
     displayName: 'Build: ${{ variables.applicationRole }}'
 
-    pool:
-      vmImage: 'windows-latest'
+    pool: ${{parameters.poolName}}
+    #pool:
+    #  vmImage: 'windows-latest'
 
     steps:
     #don't clean to cache the node_modules and potentially nuget packages
@@ -96,8 +99,9 @@ stages:
   - job: 'Deploy'
     displayName: 'Deploy: ${{ variables.applicationRole }}'
 
-    pool:
-      vmImage: 'windows-latest'
+    pool: ${{parameters.poolName}}
+    # pool:
+    #   vmImage: 'windows-latest'
 
     steps:
     - checkout: none
