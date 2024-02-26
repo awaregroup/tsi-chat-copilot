@@ -113,7 +113,7 @@ stages:
         azureSubscription: ${{parameters.serviceConnectionName}}
         ScriptType: 'InlineScript'
         Inline: |
-          $webapp = Get-AzWebApp -Tag @{'applicationRole'='$(applicationRole)'} -ResourceGroupName '$(RESOURCE_GROUP_NAME)'
+          $webapp = Get-AzResource -ResourceType 'Microsoft.Web/sites' -ResourceGroupName '$(RESOURCE_GROUP_NAME)' -Tag @{'applicationRole'='$(applicationRole)'}
           Write-Output $webapp
           If ($webapp -eq $null) { throw 'Could not find WebApp with tag: applicationRole:$(applicationRole)'}
           $webappname = $webapp.Name
