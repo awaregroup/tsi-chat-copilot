@@ -81,7 +81,7 @@ stages:
 
     - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/'
 
-    #public memorypipeline artifacts
+    #publish artifacts
     - task: PublishBuildArtifacts@1
       displayName: 'Publish artifacts'
       inputs:
@@ -121,7 +121,6 @@ stages:
         preferredAzurePowerShellVersion: '3.1.0'
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploy to Azure - $(TargetResourceName)'
       inputs:
         azureSubscription: ${{parameters.serviceConnectionName}}
         ConnectionType: 'AzureRM'
