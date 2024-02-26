@@ -115,7 +115,7 @@ stages:
         Inline: |
           $webapp = Get-AzWebApp -Tag @{'applicationRole'='$(applicationRole)'} -ResourceGroupName '$(RESOURCE_GROUP_NAME)'
           Write-Output $webapp
-          If ($webapp -eq $null) throw 'Could not find WebApp with tag: applicationRole:$(applicationRole)'
+          If ($webapp -eq $null) { throw 'Could not find WebApp with tag: applicationRole:$(applicationRole)'}
           $webappname = $webapp.Name
           Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webappname"
         preferredAzurePowerShellVersion: '3.1.0'
