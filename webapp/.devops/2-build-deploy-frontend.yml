@@ -130,8 +130,7 @@ stages:
   - job: 'Deploy'
     displayName: 'Deploy: ${{ variables.applicationRole }}'
 
-    pool:
-      vmImage: 'windows-latest'
+    pool: '$(poolName)'
 
     steps:
     - checkout: none
