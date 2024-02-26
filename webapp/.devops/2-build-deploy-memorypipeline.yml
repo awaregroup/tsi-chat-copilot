@@ -9,8 +9,6 @@ parameters:
     type: string
   - name: serviceConnectionName
     type: string
-  - name: poolName
-    type: string
 
 variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
@@ -22,8 +20,10 @@ stages:
   condition: always()
 
   variables:
+  - name: sourcePath
+    value: 'memorypipeline'
   - name: sourceFolder
-    value: '$(Build.SourcesDirectory)/memorypipeline'
+    value: '$(Build.SourcesDirectory)/$(sourcePath)'
   - name: dotnetVersion
     value: '6.x'
 
@@ -31,10 +31,9 @@ stages:
   - job: 'Build'
     displayName: 'Build: ${{ variables.applicationRole }}'
 
-    pool: ${{parameters.poolName}}
-    #pool:
-    #  vmImage: 'windows-latest'
-
+    pool:
+      vmImage: 'windows-latest'
+      
     steps:
     #don't clean to cache the node_modules and potentially nuget packages
     - checkout: self
@@ -44,10 +43,10 @@ stages:
     - script: |
           set mydate=%date:~10,4%%date:~7,2%%date:~4,2%
           for /F "tokens=*" %%g in ('git rev-parse --short HEAD') do (set hash=%%g)
-          echo "##vso[task.setvariable variable=ShortCommitHash;]%hash%"
-          echo "##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%"
-          echo "##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)"
-          echo "##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip"
+          echo ##vso[task.setvariable variable=ShortCommitHash;]%hash%
+          echo ##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%
+          echo ##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)
+          echo ##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip
       workingDirectory: '$(Build.SourcesDirectory)'
       displayName: 'Set pipeline variables'
 
@@ -63,10 +62,10 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: 'Build $(applicationRole) project'
       inputs:
-        command: 'build'
-        projects: '$(sourceFolder)/CopilotChatMemoryPipeline.csproj'
+        command: 'publish'
+        projects: '$(sourceFolder)/*.csproj'
         workingDirectory: '$(sourceFolder)'
-        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)"'
+        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)'
         publishWebProjects: false
         zipAfterPublish: false
 
@@ -75,7 +74,7 @@ stages:
     - task: ArchiveFiles@2
       displayName: 'Create artifact ZIP file'
       inputs:
-        rootFolderOrFile: '$(ArtifactDir)'
+        rootFolderOrFile: '$(ArtifactDir)/$(sourcePath)'
         includeRootFolder: false
         archiveType: 'zip'
         archiveFile: '$(ArtifactArchive)'
@@ -99,9 +98,8 @@ stages:
   - job: 'Deploy'
     displayName: 'Deploy: ${{ variables.applicationRole }}'
 
-    pool: ${{parameters.poolName}}
-    # pool:
-    #   vmImage: 'windows-latest'
+    pool:
+      vmImage: 'windows-latest'
 
     steps:
     - checkout: none
