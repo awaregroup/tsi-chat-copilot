@@ -9,121 +9,153 @@ parameters:
     type: string
   - name: serviceConnectionName
     type: string
+    
 
 variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
+- name: applicationRole
+  value: 'frontend'
 
 stages:
-  - stage: 'Build'
+- stage: 'Build'
+  condition: always()
 
-    displayName: 'Build Projects'
+  variables:
+  - name: sourcePath
+    value: webapi
+  - name: sourceFolder
+    value: '$(Build.SourcesDirectory)/$(sourcePath)'
+  - name: webAppPath
+    value: webapp
+  - name: webAppFolder
+    value: '$(Build.SourcesDirectory)/$(webAppPath)'
+  - name: dotnetVersion
+    value: '6.x'
+  - name: nodeJsVersion
+    value: '20.x'
 
-    condition: always()
+  jobs:
+  - job: 'Build'
+    displayName: 'Build: ${{ variables.applicationRole }}'
 
-    variables:
-    - name: webAppFolder
-      value: '$(Build.SourcesDirectory)/webapp'
-    - name: frontendFolder
-      value: '$(Build.SourcesDirectory)/webapi'
-    - name: backendFolder
-      value: '$(Build.SourcesDirectory)/memorypipeline'
-    - name: nodeJsVersion
-      value: '20.x'
-    - name: dotnetVersion
-      value: '6.x'
+    pool:
+      vmImage: 'windows-latest'
 
-    jobs:
-    - job: 'Frontend'
-      displayName: '1. Build Frontend'
+    steps:
+    #don't clean to cache the node_modules and potentially nuget packages
+    - checkout: self
+      clean: false 
 
-      pool:
-        vmImage: 'windows-latest'
+    #set pipeline variables based on git hash and date
+    - script: |
+          set mydate=%date:~10,4%%date:~7,2%%date:~4,2%
+          for /F "tokens=*" %%g in ('git rev-parse --short HEAD') do (set hash=%%g)
+          echo ##vso[task.setvariable variable=ShortCommitHash;]%hash%
+          echo ##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%
+          echo ##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)
+          echo ##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip
+      workingDirectory: '$(Build.SourcesDirectory)'
+      displayName: 'Set pipeline variables'
+    
+    #install correct version of nodejs
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(nodeJsVersion)
+      displayName: 'Install Node.js version $(nodeJsVersion)'
 
-      steps:
-      #don't clean to cache the node_modules and potentially nuget packages
-      - checkout: self
-        clean: false 
+    #install yarn packages
+    - script: |
+        yarn --frozen-lockfile 
+      workingDirectory: '$(webAppFolder)'
+      displayName: 'Install yarn dependencies'
 
-      #install correct version of nodejs
-      - task: NodeTool@0
-        inputs:
-          versionSpec: $(nodeJsVersion)
-        displayName: 'Web: Install Node.js version $(nodeJsVersion)'
+    #build production build of web app
+    - script: |
+        yarn build --frozen-lockfile
+      workingDirectory: '$(webAppFolder)'
+      displayName: 'Build web application'
+      env:
+        BUILD_PATH: '$(sourceFolder)/wwwroot'
+        REACT_APP_BACKEND_URI: ''
+        REACT_APP_SK_VERSION: '$(Build.SourceVersion)'
+        REACT_APP_SK_BUILD_INFO: '$(Build.BuildNumber)'
 
-      #install yarn packages
-      - script: |
-          yarn --frozen-lockfile 
-        workingDirectory: '$(webAppFolder)'
-        displayName: 'Web: Install yarn dependencies'
+    #install correct .net sdk version
+    - task: UseDotNet@2
+      displayName: 'Install .NET $(dotnetVersion) SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '$(dotnetVersion)'
 
-      #build production build of web app
-      - script: |
-          yarn build --frozen-lockfile
-        workingDirectory: '$(webAppFolder)'
-        displayName: 'Web: Build web application'
-        env:
-          BUILD_PATH: '$(frontendFolder)/wwwroot'
-          REACT_APP_BACKEND_URI: ''
-          REACT_APP_SK_VERSION: '$(Build.SourceVersion)'
-          REACT_APP_SK_BUILD_INFO: '$(Build.BuildNumber)'
+    #build project
+    - task: DotNetCoreCLI@2
+      displayName: 'Build $(applicationRole) project'
+      inputs:
+        command: 'publish'
+        projects: '$(sourceFolder)/*.csproj'
+        workingDirectory: '$(sourceFolder)'
+        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)'
+        publishWebProjects: false
+        zipAfterPublish: false
 
-      #install correct .net sdk version
-      - task: UseDotNet@2
-        inputs:
-          packageType: 'sdk'
-          version: '$(dotnetVersion)'
-          installationPath: $(Agent.ToolsDirectory)/dotnet
-          performMultiLevelLookup: true
-        displayName: '.NET: Install .NET $(dotnetVersion) SDK'
+    #we use build rather than publish above to give more flexibility on the output archive name
+    #now we build the archive
+    - task: ArchiveFiles@2
+      displayName: 'Create artifact ZIP file'
+      inputs:
+        rootFolderOrFile: '$(ArtifactDir)/$(sourcePath)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(ArtifactArchive)'
+        replaceExistingArchive: true
+        verbose: true
 
-      #build project
-      - task: DotNetCoreCLI@2
-        displayName: '.NET: Build Frontend Project'
-        inputs:
-          command: 'publish'
-          workingDirectory: '$(frontendFolder)'
-          arguments: '--configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/frontend_output"'
+    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/' -Recurse
 
-      - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/frontend_output/'
+    #publish artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish artifacts'
+      inputs:
+        pathtoPublish: '$(ArtifactArchive)'
+        artifactName: 'drop'
 
-      #public frontend artifacts
-      - task: PublishBuildArtifacts@1
-        displayName: 'Publish: Frontend Artifacts'
-        inputs:
-          pathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend_output'
-          artifactName: '$(Build.BuildId)-$(Build.SourceVersion)-ChatCopilot-Frontend'
 
-  - stage: 'Deploy'
-    displayName: 'Deploy Projects'
-    condition: always()
+- stage: 'Deploy'
+  condition: succeeded()
 
-    jobs:
-    - job: 'Deploy'
-        displayName: '2. Deploy Frontend'
+  jobs:
+  - job: 'Deploy'
+    displayName: 'Deploy: ${{ variables.applicationRole }}'
 
-        pool:
-          vmImage: 'windows-latest'
+    pool:
+      vmImage: 'windows-latest'
 
-        steps:
-        - checkout: none
+    steps:
+    - checkout: none
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            buildType: 'current'
-            targetPath: '$(Pipeline.Workspace)'
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        targetPath: '$(Pipeline.Workspace)'
 
-        - task: AzurePowerShell@5
-          inputs:
-            ScriptType: 'InlineScript'
-            Inline: |
-              $webapp = Get-AzResource -Tag @{"skweb"="1"} -ResourceGroupName '$(variables.RESOURCE_GROUP_NAME)'
-              Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webapp.Name"
-            preferredAzurePowerShellVersion: '3.1.0'
+    - task: AzurePowerShell@5
+      displayName: 'Find $(applicationRole) resource name'
+      inputs:
+        azureSubscription: ${{parameters.serviceConnectionName}}
+        ScriptType: 'InlineScript'
+        Inline: |
+          $webapp = Get-AzResource -ResourceType 'Microsoft.Web/sites' -ResourceGroupName '$(RESOURCE_GROUP_NAME)' -Tag @{'applicationRole'='$(applicationRole)'}
+          Write-Output $webapp
+          If ($webapp -eq $null) { throw 'Could not find WebApp with tag: applicationRole:$(applicationRole)'}
+          $webappname = $webapp.Name
+          Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webappname"
+        preferredAzurePowerShellVersion: '3.1.0'
 
-        - task: AzureRmWebAppDeployment@4
-          inputs:
-            ConnectionType: 'AzureRM'
-            appType: 'webApp'
-            WebAppName: '$(TargetResourceName)'
-            packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
-            AppSettings: '-DEPLOY_FROM_PACKAGE 1'
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        azureSubscription: ${{parameters.serviceConnectionName}}
+        ConnectionType: 'AzureRM'
+        appType: 'webApp'
+        WebAppName: '$(TargetResourceName)'
+        packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+        AppSettings: '-WEBSITE_RUN_FROM_PACKAGE 1'

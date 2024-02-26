@@ -9,29 +9,31 @@ parameters:
     type: string
   - name: serviceConnectionName
     type: string
+  - name: poolName
+    type: string
 
 variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
+- name: applicationRole
+  value: 'memorypipeline'
 
 stages:
 - stage: 'Build'
-
-  displayName: 'Build Projects'
-
   condition: always()
 
   variables:
-  - name: memorypipelineFolder
+  - name: sourceFolder
     value: '$(Build.SourcesDirectory)/memorypipeline'
   - name: dotnetVersion
     value: '6.x'
 
   jobs:
   - job: 'Build'
-    displayName: '1. Build MemoryPipeline'
+    displayName: 'Build: ${{ variables.applicationRole }}'
 
-    pool:
-      vmImage: 'windows-latest'
+    pool: ${{parameters.poolName}}
+    #pool:
+    #  vmImage: 'windows-latest'
 
     steps:
     #don't clean to cache the node_modules and potentially nuget packages
@@ -41,54 +43,65 @@ stages:
     #set pipeline variables based on git hash and date
     - script: |
           set mydate=%date:~10,4%%date:~7,2%%date:~4,2%
-          FOR /F "tokens=*" %%g IN ('git rev-parse --short HEAD') do (SET HASH=%%g)
-          echo "##vso[task.setvariable variable=ShortCommitHash;]%HASH%"
-          echo "##vso[task.setvariable variable=OutputPrefix;]%mydate%-%HASH%"
+          for /F "tokens=*" %%g in ('git rev-parse --short HEAD') do (set hash=%%g)
+          echo "##vso[task.setvariable variable=ShortCommitHash;]%hash%"
+          echo "##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%"
+          echo "##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)"
+          echo "##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip"
       workingDirectory: '$(Build.SourcesDirectory)'
+      displayName: 'Set pipeline variables'
 
     #install correct .net sdk version
     - task: UseDotNet@2
+      displayName: 'Install .NET $(dotnetVersion) SDK'
       inputs:
         packageType: 'sdk'
         version: '$(dotnetVersion)'
-        installationPath: $(Agent.ToolsDirectory)/dotnet
-        performMultiLevelLookup: true
-      displayName: '.NET: Install .NET $(dotnetVersion) SDK'
 
     #build project
+    
     - task: DotNetCoreCLI@2
-      displayName: '.NET: Build Backend Project'
+      displayName: 'Build $(applicationRole) project'
       inputs:
+        command: 'build'
+        projects: '$(sourceFolder)/CopilotChatMemoryPipeline.csproj'
+        workingDirectory: '$(sourceFolder)'
+        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)"'
         publishWebProjects: false
-        command: 'custom'
-        custom: 'publish'
-        projects: '$(memorypipelineFolder)/CopilotChatMemoryPipeline.csproj'
-        workingDirectory: '$(memorypipelineFolder)'
-        arguments: '--no-build --configuration Release -r win-x64 --self-contained true --output "$(Build.ArtifactStagingDirectory)/$(OutputPrefix)-Backend"'
+        zipAfterPublish: false
 
-    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/'
-
-    #public memorypipeline artifacts
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish: Backend Artifacts'
+    #we use build rather than publish above to give more flexibility on the output archive name
+    #now we build the archive
+    - task: ArchiveFiles@2
+      displayName: 'Create artifact ZIP file'
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)/'
+        rootFolderOrFile: '$(ArtifactDir)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(ArtifactArchive)'
+        replaceExistingArchive: true
+        verbose: true
+
+    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/' -Recurse
+
+    #publish artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish artifacts'
+      inputs:
+        pathtoPublish: '$(ArtifactArchive)'
         artifactName: 'drop'
 
 
 - stage: 'Deploy'
-  displayName: 'Deploy Projects'
-  condition: success()
-
-  variables:
-  - group: ${{ lower(parameters.environmentName) }}-variable-group
+  condition: succeeded()
 
   jobs:
   - job: 'Deploy'
-    displayName: '2. Deploy MemoryPipeline'
+    displayName: 'Deploy: ${{ variables.applicationRole }}'
 
-    pool:
-      vmImage: 'windows-latest'
+    pool: ${{parameters.poolName}}
+    # pool:
+    #   vmImage: 'windows-latest'
 
     steps:
     - checkout: none
@@ -99,18 +112,23 @@ stages:
         targetPath: '$(Pipeline.Workspace)'
 
     - task: AzurePowerShell@5
+      displayName: 'Find $(applicationRole) resource name'
       inputs:
         azureSubscription: ${{parameters.serviceConnectionName}}
         ScriptType: 'InlineScript'
         Inline: |
-          $webapp = Get-AzResource -Tag @{"skmemorypipeline"="1"} -ResourceGroupName '$(variables.RESOURCE_GROUP_NAME)'
-          Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webapp.Name"
+          $webapp = Get-AzResource -ResourceType 'Microsoft.Web/sites' -ResourceGroupName '$(RESOURCE_GROUP_NAME)' -Tag @{'applicationRole'='$(applicationRole)'}
+          Write-Output $webapp
+          If ($webapp -eq $null) { throw 'Could not find WebApp with tag: applicationRole:$(applicationRole)'}
+          $webappname = $webapp.Name
+          Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webappname"
         preferredAzurePowerShellVersion: '3.1.0'
 
     - task: AzureRmWebAppDeployment@4
       inputs:
+        azureSubscription: ${{parameters.serviceConnectionName}}
         ConnectionType: 'AzureRM'
         appType: 'webApp'
         WebAppName: '$(TargetResourceName)'
         packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
-        AppSettings: '-DEPLOY_FROM_PACKAGE 1'
+        AppSettings: '-WEBSITE_RUN_FROM_PACKAGE 1'
