@@ -60,16 +60,11 @@ stages:
       inputs:
         versionSpec: $(nodeJsVersion)
       displayName: 'Install Node.js version $(nodeJsVersion)'
-      
-    #install yarn packages
-    - script: |
-        npm install -g yarn
-        npm install -g react-scripts
-      displayName: 'Install yarn'
+
+    - script: npm install -g yarn react-scripts
 
     #install yarn packages
     - script: |
-        npm install -g yarn
         yarn --frozen-lockfile 
       workingDirectory: '$(webAppFolder)'
       displayName: 'Install yarn dependencies'
