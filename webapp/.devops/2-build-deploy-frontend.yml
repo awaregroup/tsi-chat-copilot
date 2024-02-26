@@ -94,6 +94,13 @@ stages:
         publishWebProjects: false
         zipAfterPublish: false
 
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(sourceFolder)/wwwroot'
+        Contents: '**'
+        TargetFolder: '$(ArtifactDir)/wwwroot'
+        OverWrite: true
+
     #we use build rather than publish above to give more flexibility on the output archive name
     #now we build the archive
     - task: ArchiveFiles@2
