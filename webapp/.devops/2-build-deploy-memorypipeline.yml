@@ -63,7 +63,7 @@ stages:
         command: 'build'
         projects: '$(sourceFolder)/CopilotChatMemoryPipeline.csproj'
         workingDirectory: '$(sourceFolder)'
-        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)"
+        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)"'
         publishWebProjects: false
         zipAfterPublish: false
 
