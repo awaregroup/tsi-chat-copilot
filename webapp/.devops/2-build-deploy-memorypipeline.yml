@@ -17,7 +17,6 @@ variables:
 
 stages:
 - stage: 'Build'
-  displayName: 'Build Projects'
   condition: always()
 
   variables:
@@ -89,7 +88,6 @@ stages:
 
 
 - stage: 'Deploy'
-  displayName: 'Deploy ${{ variables.applicationRole }}'
   condition: succeeded()
 
   variables:
