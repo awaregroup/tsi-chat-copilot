@@ -92,7 +92,7 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: 'Build $(applicationRole) project'
       inputs:
-        command: 'build'
+        command: 'publish'
         projects: '$(sourceFolder)/*.csproj'
         workingDirectory: '$(sourceFolder)'
         arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)'
