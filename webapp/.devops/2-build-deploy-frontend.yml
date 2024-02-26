@@ -22,6 +22,8 @@ stages:
   variables:
   - name: sourceFolder
     value: '$(Build.SourcesDirectory)/webapi'
+  - name: webAppFolder
+    value: '$(Build.SourcesDirectory)/webapp'
   - name: dotnetVersion
     value: '6.x'
 
@@ -47,6 +49,29 @@ stages:
           echo "##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip"
       workingDirectory: '$(Build.SourcesDirectory)'
       displayName: 'Set pipeline variables'
+    
+    #install correct version of nodejs
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(nodeJsVersion)
+      displayName: 'Web: Install Node.js version $(nodeJsVersion)'
+
+    #install yarn packages
+    - script: |
+        yarn --frozen-lockfile 
+      workingDirectory: '$(webAppFolder)'
+      displayName: 'Install yarn dependencies'
+
+    #build production build of web app
+    - script: |
+        yarn build --frozen-lockfile
+      workingDirectory: '$(webAppFolder)'
+      displayName: 'Build web application'
+      env:
+        BUILD_PATH: '$(sourceFolder)/wwwroot'
+        REACT_APP_BACKEND_URI: ''
+        REACT_APP_SK_VERSION: '$(Build.SourceVersion)'
+        REACT_APP_SK_BUILD_INFO: '$(Build.BuildNumber)'
 
     #install correct .net sdk version
     - task: UseDotNet@2
