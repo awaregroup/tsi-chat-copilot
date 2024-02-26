@@ -45,10 +45,10 @@ stages:
     - script: |
           set mydate=%date:~10,4%%date:~7,2%%date:~4,2%
           for /F "tokens=*" %%g in ('git rev-parse --short HEAD') do (set hash=%%g)
-          echo "##vso[task.setvariable variable=ShortCommitHash;]%hash%"
-          echo "##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%"
-          echo "##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)"
-          echo "##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip"
+          echo ##vso[task.setvariable variable=ShortCommitHash;]%hash%
+          echo ##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%
+          echo ##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)
+          echo ##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip
       workingDirectory: '$(Build.SourcesDirectory)'
       displayName: 'Set pipeline variables'
     
@@ -90,7 +90,7 @@ stages:
         command: 'build'
         projects: '$(sourceFolder)/*.csproj'
         workingDirectory: '$(sourceFolder)'
-        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)"'
+        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)'
         publishWebProjects: false
         zipAfterPublish: false
 
