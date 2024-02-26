@@ -46,10 +46,11 @@ stages:
           echo "##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)"
           echo "##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip"
       workingDirectory: '$(Build.SourcesDirectory)'
+      displayName: 'Set pipeline variables'
 
     #install correct .net sdk version
     - task: UseDotNet@2
-      displayName: '.NET: Install .NET $(dotnetVersion) SDK'
+      displayName: 'Install .NET $(dotnetVersion) SDK'
       inputs:
         packageType: 'sdk'
         version: '$(dotnetVersion)'
@@ -57,7 +58,7 @@ stages:
     #build project
     
     - task: DotNetCoreCLI@2
-      displayName: '.NET: Build $(applicationRole) project'
+      displayName: 'Build $(applicationRole) project'
       inputs:
         command: 'build'
         projects: '$(sourceFolder)/CopilotChatMemoryPipeline.csproj'
@@ -69,6 +70,7 @@ stages:
     #we use build rather than publish above to give more flexibility on the output archive name
     #now we build the archive
     - task: ArchiveFiles@2
+      displayName: 'Create artifact ZIP file'
       inputs:
         rootFolderOrFile: '$(ArtifactDir)'
         includeRootFolder: false
@@ -81,7 +83,7 @@ stages:
 
     #public memorypipeline artifacts
     - task: PublishBuildArtifacts@1
-      displayName: 'Publish: Backend Artifacts'
+      displayName: 'Publish artifacts'
       inputs:
         pathtoPublish: '$(ArtifactArchive)'
         artifactName: 'drop'
@@ -109,6 +111,7 @@ stages:
         targetPath: '$(Pipeline.Workspace)'
 
     - task: AzurePowerShell@5
+      displayName: 'Find $(applicationRole) resource name'
       inputs:
         azureSubscription: ${{parameters.serviceConnectionName}}
         ScriptType: 'InlineScript'
@@ -118,9 +121,11 @@ stages:
         preferredAzurePowerShellVersion: '3.1.0'
 
     - task: AzureRmWebAppDeployment@4
+      displayName: 'Deploy to Azure - $(TargetResourceName)'
       inputs:
+        azureSubscription: ${{parameters.serviceConnectionName}}
         ConnectionType: 'AzureRM'
         appType: 'webApp'
         WebAppName: '$(TargetResourceName)'
         packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
-        AppSettings: '-DEPLOY_FROM_PACKAGE 1'
+        AppSettings: '-WEBSITE_RUN_FROM_PACKAGE 1'
