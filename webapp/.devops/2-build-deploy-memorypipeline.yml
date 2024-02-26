@@ -12,6 +12,8 @@ parameters:
 
 variables:
 - group: ${{ lower(parameters.environmentName) }}-variable-group
+- name: applicationRole
+  value: 'memorypipeline'
 
 stages:
 - stage: 'Build'
@@ -19,8 +21,6 @@ stages:
   condition: always()
 
   variables:
-  - name: applicationRole
-    value: 'memorypipeline'
   - name: sourceFolder
     value: '$(Build.SourcesDirectory)/memorypipeline'
   - name: dotnetVersion
@@ -97,7 +97,7 @@ stages:
 
   jobs:
   - job: 'Deploy'
-    displayName: '2. Deploy MemoryPipeline'
+    displayName: 'Deploy ${{ variables.applicationRole }}'
 
     pool:
       vmImage: 'windows-latest'
@@ -115,7 +115,7 @@ stages:
         azureSubscription: ${{parameters.serviceConnectionName}}
         ScriptType: 'InlineScript'
         Inline: |
-          $webapp = Get-AzResource -Tag @{"skmemorypipeline"="1"} -ResourceGroupName '$(variables.RESOURCE_GROUP_NAME)'
+          $webapp = Get-AzResource -Tag @{'applicationRole'='$(applicationRole)'} -ResourceGroupName '$(RESOURCE_GROUP_NAME)'
           Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webapp.Name"
         preferredAzurePowerShellVersion: '3.1.0'
 
