@@ -92,9 +92,6 @@ stages:
 - stage: 'Deploy'
   condition: succeeded()
 
-  variables:
-  - group: ${{ lower(parameters.environmentName) }}-variable-group
-
   jobs:
   - job: 'Deploy'
     displayName: 'Deploy ${{ variables.applicationRole }}'
