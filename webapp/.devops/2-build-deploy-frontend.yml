@@ -142,6 +142,7 @@ stages:
         buildType: 'current'
         targetPath: '$(Pipeline.Workspace)'
 
+    - powershell: Install-Module -Name Az -Repository PSGallery -Force
     - task: AzurePowerShell@5
       displayName: 'Find $(applicationRole) resource name'
       inputs:
