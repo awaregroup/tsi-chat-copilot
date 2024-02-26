@@ -27,7 +27,7 @@ stages:
 
   jobs:
   - job: 'Build'
-    displayName: 'Build ${{ variables.applicationRole }}'
+    displayName: 'Build: ${{ variables.applicationRole }}'
 
     pool:
       vmImage: 'windows-latest'
@@ -94,7 +94,7 @@ stages:
 
   jobs:
   - job: 'Deploy'
-    displayName: 'Deploy ${{ variables.applicationRole }}'
+    displayName: 'Deploy: ${{ variables.applicationRole }}'
 
     pool:
       vmImage: 'windows-latest'
