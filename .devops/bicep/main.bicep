@@ -1,6 +1,6 @@
 @description('Organisation Code')
 @minLength(2)
-@maxLength(5)
+@maxLength(8)
 param organisationCode string = 'AWARE'
 
 @description('Environment')
@@ -48,7 +48,6 @@ module storageResources './storage.bicep' = {
   }
 }
 
-// AI resources
 module aiResources './ai.bicep' = {
   name: 'AI_Resources'
   params: {
@@ -84,7 +83,7 @@ module logResources './appinsight.bicep' = {
   }
 }
 
-module codeDeployResources './codedeploy.bicep' = {
+module codeDeployResources './codedeployandconfig.bicep' = {
   name: 'Code_Deploy'
   params: {
     location: location
@@ -110,6 +109,17 @@ module codeDeployResources './codedeploy.bicep' = {
     externalAzureOpenAIEmbeddingDeploymentName: externalAzureOpenAIEmbeddingDeploymentName
     externalAzureOpenAIEndpoint: externalAzureOpenAIEndpoint
     externalAzureOpenAIKey: externalAzureOpenAIKey
+  }
+}
+
+module managedIdentityResources './managedidentity.bicep' = {
+  name: 'Managed_Identity'
+  params: {
+    appServiceFrontendName: webResources.outputs.appServiceFrontendName
+    appServiceMemoryPipelineName: webResources.outputs.appServiceMemoryPipelineName
+    cosmosAccountName: cosmosResources.outputs.cosmosAccountName
+    azureSearchAccountName: aiResources.outputs.azureSearchAccountName
+    storageAccountName: storageResources.outputs.storageAccountName
   }
 }
 

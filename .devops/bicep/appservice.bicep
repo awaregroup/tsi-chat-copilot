@@ -23,15 +23,9 @@ resource appServiceFrontend 'Microsoft.Web/sites@2022-09-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-    // virtualNetworkSubnetId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[0].id : null
-    siteConfig: {
-      appSettings: [
-        {
-          name: 'WEBSITE_RUN_FROM_PACKAGE'
-          value: '1'
-        }
-      ]
-    }
+  }
+  identity: {
+    type: 'SystemAssigned'
   }
 }
 
@@ -52,6 +46,9 @@ resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' = {
     siteConfig: {
       healthCheckPath: '/healthz'
     }
+  }
+  identity: {
+    type: 'SystemAssigned'
   }
 }
 

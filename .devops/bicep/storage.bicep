@@ -1,17 +1,20 @@
 param resourcePrefix string
 param location string
 
+var proposedStorageName = '${replace(resourcePrefix, '-', '')}storage'
 resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: substring('${replace(resourcePrefix, '-', '')}storage', 0, 24) //no hyphens and max length 24 chars
+  name: length(proposedStorageName) > 24 ? substring(proposedStorageName, 0, 24) : proposedStorageName
   location: location
   kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'
   }
   properties: {
+    minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
     allowBlobPublicAccess: false //disable public access at the storage account level
-    allowSharedKeyAccess: false //disable access keys
+    // allowSharedKeyAccess: false //disable access keys
+    allowSharedKeyAccess: true //disable access keys
   }
 }
 
@@ -26,17 +29,3 @@ resource chatMemoryContainer 'Microsoft.Storage/storageAccounts/blobServices/con
   name: 'chatmemory'
   parent: storageBlobServices
 }
-
-resource storageBlobDataContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  scope: subscription()
-  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-}
-
-// resource blobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-//   name: guid(resourceGroup().id, webApp.id, storageBlobDataContributorRoleDefinition.id)
-//   scope: storageAccount
-//   properties: {
-//     roleDefinitionId: storageBlobDataContributorRoleDefinition.id
-//     principalId: webApp.identity.principalId
-//   }
-// }

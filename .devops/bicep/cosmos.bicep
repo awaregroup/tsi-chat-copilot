@@ -15,6 +15,9 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
     ]
     databaseAccountOfferType: 'Standard'
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
 }
 
 output cosmosAccountName string = cosmosAccount.name
