@@ -11,12 +11,12 @@ import { BackendProbe, ChatView, Error, Loading, Login } from './components/view
 import { AuthHelper } from './libs/auth/AuthHelper';
 import { useChat, useFile } from './libs/hooks';
 import { AlertType } from './libs/models/AlertType';
+import { UxConfig } from './libs/ux/UxHelper';
 import { useAppDispatch, useAppSelector } from './redux/app/hooks';
 import { RootState } from './redux/app/store';
 import { FeatureKeys } from './redux/features/app/AppState';
 import { addAlert, setActiveUserInfo, setServiceInfo } from './redux/features/app/appSlice';
 import { semanticKernelDarkTheme, semanticKernelLightTheme } from './styles';
-import { UxConfig } from './libs/ux/UxHelper';
 
 export const useClasses = makeStyles({
     container: {
@@ -42,13 +42,27 @@ export const useClasses = makeStyles({
     headerTitleContainer: {
         display: 'flex',
         alignItems: 'left',
-        marginTop: '-5px',
+        // marginTop: '-5px',
         paddingLeft: tokens.spacingVerticalSNudge
     },
-    headerLogo: {
-        height: '95%',
+    headerText: {
         display: 'flex',
-        marginTop: '10px',
+        alignItems: 'center',
+        fontSize: tokens.fontSizeBase500,
+        fontWeight: tokens.fontWeightRegular,
+        // marginTop: '9px',
+        paddingLeft: '5px',
+    },
+    headerLogo: {
+        paddingLeft: '5px',
+        paddingRight: '10px',
+        height: '30px',
+        maxWidth: '100px',
+        // width: '115px',
+        display: 'flex',
+        // marginTop: '9px',
+        backgroundSize: 'contain',
+        ...shorthands.borderRadius('4px'),
     },
     persona: {
         marginRight: tokens.spacingHorizontalXXL,
@@ -220,9 +234,9 @@ const Chat = ({
         <div className={classes.container}>
             <div className={classes.header}>
                 <div className={classes.headerTitleContainer}>
-                    {uxConfig.pageLogoUrl ? <img className={classes.headerLogo} src={uxConfig.pageLogoUrl} alt={uxConfig.applicationName} /> : null}
+                    {uxConfig.pageLogoUrl ? <><img className={classes.headerLogo} src={uxConfig.pageLogoUrl}  /></> : null}
 
-                    {uxConfig.applicationNameVisible ? <Subtitle1 as="h1">{uxConfig.applicationName}</Subtitle1> : null}
+                    {uxConfig.applicationNameVisible ? <div className={classes.headerText}>{uxConfig.applicationName}</div> : null}
                 </div>
                 {appState > AppState.SettingUserInfo && (
                     <div className={classes.cornerItems}>

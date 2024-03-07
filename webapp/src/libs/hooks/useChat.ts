@@ -267,7 +267,7 @@ export const useChat = () => {
     };
 
     const getBotProfilePicture = (index: number): string => {
-        return botProfilePictures[index % botProfilePictures.length];
+        return uxConfig.copilotAvatarUrl.length > 0 ? uxConfig.copilotAvatarUrl : botProfilePictures[index % botProfilePictures.length];
     };
 
     const getChatMemorySources = async (chatId: string) => {
