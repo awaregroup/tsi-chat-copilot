@@ -68,7 +68,7 @@ export enum FeatureKeys {
     SimplifiedExperience,
     PluginsPlannersAndPersonas,
     AzureContentSafety,
-    AzureCognitiveSearch,
+    AzureAISearch,
     BotAsDocs,
     MultiUserChat,
     RLHF, // Reinforcement Learning from Human Feedback
@@ -93,9 +93,9 @@ export const Features = {
         label: 'Azure Content Safety',
         inactive: true,
     },
-    [FeatureKeys.AzureCognitiveSearch]: {
+    [FeatureKeys.AzureAISearch]: {
         enabled: false,
-        label: 'Azure Cognitive Search',
+        label: 'Azure AI Search',
         inactive: true,
     },
     [FeatureKeys.BotAsDocs]: {
@@ -129,7 +129,7 @@ export const Settings = [
     },
     {
         title: 'Azure AI',
-        features: [FeatureKeys.AzureContentSafety, FeatureKeys.AzureCognitiveSearch],
+        features: [FeatureKeys.AzureContentSafety, FeatureKeys.AzureAISearch],
         stackVertically: true,
     },
     {
