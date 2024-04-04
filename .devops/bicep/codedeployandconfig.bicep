@@ -1,26 +1,28 @@
 param location string
 param appServiceFrontendName string
-param appServiceMemoryPipelineName string
+// param appServiceAppSettings array
 param appServiceFrontendPackageUri string
-param appServiceMemoryPipelinePackageUri string
 param storageAccountName string
-param azureSearchAccountName string
-// param azureOpenAIAccountName string
+param storageAccountSecretName string
+param aiSearchAccountName string
+param aiSearchSecretName string
 param appInsightsName string
-param azureOcrAccountName string
+param documentIntelligenceAccountName string
+param documentIntelligenceSecretName string
 param cosmosAccountName string
+param cosmosDbSecretName string
 param speechAccountName string
+param keyVaultName string
 
 param azureAdInstance string
 param azureAdTenantId string
 param azureAdFrontendClientId string
 param azureAdBackendClientId string
 
-param useExternalAzureOpenAIEndpoint bool
-param externalAzureOpenAIEndpoint string
-param externalAzureOpenAIDeploymentName string
-param externalAzureOpenAIEmbeddingDeploymentName string
-param externalAzureOpenAIKey string = ''
+param azureOpenAIEndpoint string
+param azureOpenAIDeploymentName string
+param azureOpenAIEmbeddingDeploymentName string
+param azureOpenAIKeySecretName string
 
 resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' existing = {
   name: speechAccountName
@@ -34,27 +36,23 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
   name: appInsightsName
 }
 
-resource ocrAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' existing = {
-  name: azureOcrAccountName
+resource documentIntelligenceAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' existing = {
+  name: documentIntelligenceAccountName
 }
 
-resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
   name: storageAccountName
 }
 
-resource azureSearchAccount 'Microsoft.Search/searchServices@2022-09-01' existing = {
-  name: azureSearchAccountName
+resource aiSearchAccount 'Microsoft.Search/searchServices@2022-09-01' existing = {
+  name: aiSearchAccountName
 }
 
 resource appServiceFrontend 'Microsoft.Web/sites@2022-09-01' existing = {
   name: appServiceFrontendName
 }
 
-resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' existing = {
-  name: appServiceMemoryPipelineName
-}
-
-resource appServiceWebDeployFrontend 'Microsoft.Web/sites/extensions@2022-09-01' = {
+resource appServiceFrontendDeployment 'Microsoft.Web/sites/extensions@2022-09-01' = {
   name: 'onedeploy'
   parent: appServiceFrontend
   dependsOn: [
@@ -67,305 +65,267 @@ resource appServiceWebDeployFrontend 'Microsoft.Web/sites/extensions@2022-09-01'
   }
 }
 
-resource appServiceWebDeployMemoryPipeline 'Microsoft.Web/sites/extensions@2022-09-01' = {
-  name: 'onedeploy'
-  parent: appServiceMemoryPipeline
-  dependsOn: [
-    appServiceMemoryPipelineConfig
-  ]
-  properties: {
-    type: 'zip'
-    clean: true
-    packageUri: appServiceMemoryPipelinePackageUri
-  }
-}
-
 var aiService = 'AzureOpenAI'
 var memoryStore = 'AzureCognitiveSearch'
-resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' = {
-  parent: appServiceMemoryPipeline
-  name: 'web'
-  properties: union(
-    appServiceFrontend.properties,
-
-    {
-      http20Enabled: true
-      alwaysOn: true
-      detailedErrorLoggingEnabled: true
-      minTlsVersion: '1.2'
-      netFrameworkVersion: 'v6.0'
-      use32BitWorkerProcess: false
-      vnetRouteAllEnabled: true
-      appSettings: [
-        {
-          name: 'WEBSITE_RUN_FROM_PACKAGE'
-          value: '1'
-        }
-        {
-          name: 'KernelMemory:ContentStorageType'
-          value: 'AzureBlobs'
-        }
-        {
-          name: 'KernelMemory:TextGeneratorType'
-          value: aiService
-        }
-        {
-          name: 'KernelMemory:ImageOcrType'
-          value: 'AzureFormRecognizer'
-        }
-        {
-          name: 'KernelMemory:DataIngestion:OrchestrationType'
-          value: 'Distributed'
-        }
-        {
-          name: 'KernelMemory:DataIngestion:DistributedOrchestration:QueueType'
-          value: 'AzureQueue'
-        }
-        {
-          name: 'KernelMemory:DataIngestion:EmbeddingGeneratorTypes:0'
-          value: aiService
-        }
-        {
-          name: 'KernelMemory:DataIngestion:VectorDbTypes:0'
-          value: memoryStore
-        }
-        {
-          name: 'KernelMemory:Retrieval:VectorDbType'
-          value: memoryStore
-        }
-        {
-          name: 'KernelMemory:Retrieval:EmbeddingGeneratorType'
-          value: aiService
-        }
-        {
-          name: 'KernelMemory:Services:AzureBlobs:Auth'
-          value: 'ConnectionString'
-        }
-        {
-          name: 'KernelMemory:Services:AzureBlobs:ConnectionString'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
-        }
-        {
-          name: 'KernelMemory:Services:AzureBlobs:Container'
-          value: 'chatmemory'
-        }
-        {
-          name: 'KernelMemory:Services:AzureQueue:Auth'
-          value: 'ConnectionString'
-        }
-        {
-          name: 'KernelMemory:Services:AzureQueue:ConnectionString'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
-        }
-        {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:Auth'
-          value: 'ApiKey'
-        }
-        {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:Endpoint'
-          value: memoryStore == 'AzureCognitiveSearch' ? 'https://${azureSearchAccount.name}.search.windows.net' : ''
-        }
-        {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:APIKey'
-          value: memoryStore == 'AzureCognitiveSearch' ? azureSearchAccount.listAdminKeys().primaryKey : ''
-        }
-        // {
-        //   name: 'KernelMemory:Services:Qdrant:Endpoint'
-        //   value: memoryStore == 'Qdrant' ? 'https://${appServiceQdrant.properties.defaultHostName}' : ''
-        // }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:Auth'
-          value: 'ApiKey'
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:Endpoint'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEndpoint : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:APIKey'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:Deployment'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIDeploymentName : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:Auth'
-          value: 'ApiKey'
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:Endpoint'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEndpoint : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:APIKey'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:Deployment'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEmbeddingDeploymentName : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:AzureFormRecognizer:Auth'
-          value: 'ApiKey'
-        }
-        {
-          name: 'KernelMemory:Services:AzureFormRecognizer:Endpoint'
-          value: ocrAccount.properties.endpoint
-        }
-        {
-          name: 'KernelMemory:Services:AzureFormRecognizer:APIKey'
-          value: ocrAccount.listKeys().key1
-        }
-        {
-          name: 'KernelMemory:Services:OpenAI:TextModel'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIDeploymentName : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:OpenAI:EmbeddingModel'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEmbeddingDeploymentName : '' //TODO: revisit these
-        }
-        {
-          name: 'KernelMemory:Services:OpenAI:APIKey'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : '' //TODO: revisit these
-        }
-        {
-          name: 'Logging:LogLevel:Default'
-          value: 'Information'
-        }
-        {
-          name: 'Logging:LogLevel:AspNetCore'
-          value: 'Warning'
-        }
-        {
-          name: 'Logging:ApplicationInsights:LogLevel:Default'
-          value: 'Warning'
-        }
-        {
-          name: 'ApplicationInsights:ConnectionString'
-          value: appInsights.properties.ConnectionString
-        }
-      ]
-    })
-}
 
 resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
   parent: appServiceFrontend
   name: 'web'
   properties: {
-    http20Enabled: true
-    alwaysOn: false
-    cors: {
-      allowedOrigins: [
-        'http://localhost:3000'
-        'https://localhost:3000'
-      ]
-      supportCredentials: true
-    }
-    detailedErrorLoggingEnabled: true
-    minTlsVersion: '1.2'
-    netFrameworkVersion: 'v6.0'
-    use32BitWorkerProcess: false
-    vnetRouteAllEnabled: true
-    webSocketsEnabled: true
-    appSettings: concat([
+    appSettings: union(
+      [],
+      [
+        //azure ad
         {
-          name: 'Authentication:Type'
+          name: 'Authentication__Type'
           value: 'AzureAd'
         }
         {
-          name: 'Authentication:AzureAd:Instance'
+          name: 'Authentication__AzureAd__Instance'
           value: azureAdInstance
         }
         {
-          name: 'Authentication:AzureAd:TenantId'
+          name: 'Authentication__AzureAd__TenantId'
           value: azureAdTenantId
         }
         {
-          name: 'Authentication:AzureAd:ClientId'
+          name: 'Authentication__AzureAd__ClientId'
           value: azureAdBackendClientId
         }
         {
-          name: 'Frontend:AadClientId'
+          name: 'Frontend__AadClientId'
           value: azureAdFrontendClientId
         }
         {
-          name: 'Authentication:AzureAd:Scopes'
+          name: 'Authentication__AzureAd__Scopes'
           value: 'access_as_user'
         }
+
+        //planner/chatstore
         {
-          name: 'Planner:Model'
+          name: 'Planner__Model'
           value: 'gpt-35-turbo'
         }
         {
-          name: 'ChatStore:Type'
+          name: 'ChatStore__Type'
           value: 'cosmos'
         }
         {
-          name: 'ChatStore:Cosmos:Database'
+          name: 'ChatStore__Cosmos__Database'
           value: 'CopilotChat'
         }
         {
-          name: 'ChatStore:Cosmos:ChatSessionsContainer'
+          name: 'ChatStore__Cosmos__ChatSessionsContainer'
           value: 'chatsessions'
         }
         {
-          name: 'ChatStore:Cosmos:ChatMessagesContainer'
+          name: 'ChatStore__Cosmos__ChatMessagesContainer'
           value: 'chatmessages'
         }
         {
-          name: 'ChatStore:Cosmos:ChatMemorySourcesContainer'
+          name: 'ChatStore__Cosmos__ChatMemorySourcesContainer'
           value: 'chatmemorysources'
         }
         {
-          name: 'ChatStore:Cosmos:ChatParticipantsContainer'
+          name: 'ChatStore__Cosmos__ChatParticipantsContainer'
           value: 'chatparticipants'
         }
         {
-          name: 'ChatStore:Cosmos:ConnectionString'
-          value: cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString
+          name: 'ChatStore__Cosmos__ConnectionString'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${cosmosDbSecretName})'
+        }
+
+        //azure speech
+        {
+          name: 'AzureSpeech__Region'
+          value: speechAccount.location
         }
         {
-          name: 'AzureSpeech:Region'
-          value: location
-        }
-        {
-          name: 'AzureSpeech:Key'
+          name: 'AzureSpeech__Key'
           value: speechAccount.listKeys().key1
         }
+
+        //kestrel (internal .net webserver)
         {
           name: 'AllowedOrigins'
           value: '[*]' // Defer list of allowed origins to the Azure service app's CORS configuration
         }
         {
-          name: 'Kestrel:Endpoints:Https:Url'
-          value: 'https://localhost:443'
+          name: 'Kestrel__Endpoints__Https__Url'
+          value: 'https://localhost__443'
         }
 
+        //logging
         {
-          name: 'Logging:LogLevel:Default'
+          name: 'Logging__LogLevel__Default'
           value: 'Warning'
         }
         {
-          name: 'Logging:LogLevel:CopilotChat.WebApi'
+          name: 'Logging__LogLevel__CopilotChat.WebApi'
           value: 'Warning'
         }
         {
-          name: 'Logging:LogLevel:Microsoft.SemanticKernel'
+          name: 'Logging__LogLevel__Microsoft.SemanticKernel'
           value: 'Warning'
         }
         {
-          name: 'Logging:LogLevel:Microsoft.AspNetCore.Hosting'
+          name: 'Logging__LogLevel__Microsoft.AspNetCore.Hosting'
           value: 'Warning'
         }
         {
-          name: 'Logging:LogLevel:Microsoft.Hosting.Lifetimel'
+          name: 'Logging__LogLevel__Microsoft.Hosting.Lifetimel'
           value: 'Warning'
         }
         {
-          name: 'Logging:ApplicationInsights:LogLevel:Default'
+          name: 'Logging__ApplicationInsights__LogLevel__Default'
           value: 'Warning'
         }
+
+        //kernel memory
+        {
+          name: 'KernelMemory__ContentStorageType'
+          value: 'AzureBlobs'
+        }
+        {
+          name: 'KernelMemory__TextGeneratorType'
+          value: aiService
+        }
+        {
+          name: 'KernelMemory__DataIngestion__OrchestrationType'
+          value: 'InProcess'
+        }
+        {
+          name: 'KernelMemory__DataIngestion__DistributedOrchestration__QueueType'
+          value: 'AzureQueue'
+        }
+        {
+          name: 'KernelMemory__DataIngestion__EmbeddingGeneratorTypes__0'
+          value: aiService
+        }
+        {
+          name: 'KernelMemory__DataIngestion__VectorDbTypes__0'
+          value: memoryStore
+        }
+        {
+          name: 'KernelMemory__Retrieval__VectorDbType'
+          value: memoryStore
+        }
+        {
+          name: 'KernelMemory__Retrieval__EmbeddingGeneratorType'
+          value: aiService
+        }
+        {
+          name: 'KernelMemory__Services__AzureBlobs__Auth'
+          value: 'APIKey'
+        }
+        {
+          name: 'KernelMemory__Services__AzureBlobs__Account'
+          value: storageAccount.name
+        }
+        {
+          name: 'KernelMemory__Services__AzureBlobs__ConnectionString'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${storageAccountSecretName})'
+        }
+        {
+          name: 'KernelMemory__Services__AzureBlobs__Container'
+          value: 'chatmemory'
+        }
+        {
+          name: 'KernelMemory__Services__AzureQueue__Auth'
+          value: 'APIKey'
+        }
+        {
+          name: 'KernelMemory__Services__AzureQueue__ConnectionString'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${storageAccountSecretName})'
+        }
+        {
+          name: 'KernelMemory__Services__AzureCognitiveSearch__Auth'
+          value: 'APIKey'
+        }
+        {
+          name: 'KernelMemory__Services__AzureCognitiveSearch__Endpoint'
+          value: 'https://${aiSearchAccount.name}.search.windows.net'
+        }
+        {
+          name: 'KernelMemory__Services__AzureCognitiveSearch__APIKey'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${aiSearchSecretName})'
+        }
+        // {
+        //   name: 'KernelMemory__Services__Qdrant__Endpoint'
+        //   value: memoryStore == 'Qdrant' ? 'https://${appServiceQdrant.properties.defaultHostName}' : ''
+        // }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIText__Auth'
+          value: 'ApiKey'
+        }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIText__Endpoint'
+          value: azureOpenAIEndpoint
+        }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIText__APIKey'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${azureOpenAIKeySecretName})'
+        }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIText__Deployment'
+          value: azureOpenAIDeploymentName
+        }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIEmbedding__Auth'
+          value: 'ApiKey'
+        }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIEmbedding__Endpoint'
+          value: azureOpenAIEndpoint
+        }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIEmbedding__APIKey'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${azureOpenAIKeySecretName})'
+        }
+        {
+          name: 'KernelMemory__Services__AzureOpenAIEmbedding__Deployment'
+          value: azureOpenAIEmbeddingDeploymentName
+        }
+        {
+          name: 'KernelMemory__Services__OpenAI__TextModel'
+          value: azureOpenAIDeploymentName
+        }
+        {
+          name: 'KernelMemory__Services__OpenAI__EmbeddingModel'
+          value: azureOpenAIEmbeddingDeploymentName
+        }
+        {
+          name: 'KernelMemory__Services__OpenAI__APIKey'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${azureOpenAIKeySecretName})'
+        }
+        {
+          name: 'KernelMemory__Services__AzureFormRecognizer__Auth'
+          value: 'APIKey'
+        }
+        {
+          name: 'KernelMemory__Services__AzureFormRecognizer__APIKey'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${documentIntelligenceSecretName})'
+        }
+        {
+          name: 'KernelMemory__Services__AzureFormRecognizer__Endpoint'
+          value: documentIntelligenceAccount.properties.endpoint
+        }
+        {
+          name: 'KernelMemory__ImageOcrType'
+          value: 'AzureFormRecognizer'
+        }
+
+        //document upload limits
+        {
+          name: 'DocumentMemory__FileSizeLimit'
+          value: '50000000'
+        }
+        {
+          name: 'DocumentMemory__FileCountLimit'
+          value: '50'
+        }
+
+        //appinsights / misc
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsights.properties.ConnectionString
@@ -373,118 +333,6 @@ resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         {
           name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
           value: '~2'
-        }
-        {
-          name: 'KernelMemory:ContentStorageType'
-          value: 'AzureBlobs'
-        }
-        {
-          name: 'KernelMemory:TextGeneratorType'
-          value: aiService
-        }
-        {
-          name: 'KernelMemory:DataIngestion:OrchestrationType'
-          value: 'InProcess'
-        }
-        {
-          name: 'KernelMemory:DataIngestion:DistributedOrchestration:QueueType'
-          value: 'AzureQueue'
-        }
-        {
-          name: 'KernelMemory:DataIngestion:EmbeddingGeneratorTypes:0'
-          value: aiService
-        }
-        {
-          name: 'KernelMemory:DataIngestion:VectorDbTypes:0'
-          value: memoryStore
-        }
-        {
-          name: 'KernelMemory:Retrieval:VectorDbType'
-          value: memoryStore
-        }
-        {
-          name: 'KernelMemory:Retrieval:EmbeddingGeneratorType'
-          value: aiService
-        }
-        {
-          name: 'KernelMemory:Services:AzureBlobs:Auth'
-          value: 'AzureIdentity'
-        }
-        {
-          name: 'KernelMemory:Services:AzureBlobs:ConnectionString'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
-        }
-        {
-          name: 'KernelMemory:Services:AzureBlobs:Container'
-          value: 'chatmemory'
-        }
-        {
-          name: 'KernelMemory:Services:AzureQueue:Auth'
-          value: 'AzureIdentity'
-        }
-        {
-          name: 'KernelMemory:Services:AzureQueue:ConnectionString'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
-        }
-        {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:Auth'
-          value: 'AzureIdentity'
-        }
-        {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:Endpoint'
-          value: 'https://${azureSearchAccount.name}.search.windows.net'
-        }
-        {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:APIKey'
-          value: azureSearchAccount.listAdminKeys().primaryKey
-        }
-        // {
-        //   name: 'KernelMemory:Services:Qdrant:Endpoint'
-        //   value: memoryStore == 'Qdrant' ? 'https://${appServiceQdrant.properties.defaultHostName}' : ''
-        // }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:Auth'
-          value: 'ApiKey'
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:Endpoint'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEndpoint : ''
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:APIKey'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : ''
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIText:Deployment'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIDeploymentName : ''
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:Auth'
-          value: 'ApiKey'
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:Endpoint'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEndpoint : ''
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:APIKey'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : ''
-        }
-        {
-          name: 'KernelMemory:Services:AzureOpenAIEmbedding:Deployment'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEmbeddingDeploymentName : ''
-        }
-        {
-          name: 'KernelMemory:Services:OpenAI:TextModel'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIDeploymentName : ''
-        }
-        {
-          name: 'KernelMemory:Services:OpenAI:EmbeddingModel'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIEmbeddingDeploymentName : ''
-        }
-        {
-          name: 'KernelMemory:Services:OpenAI:APIKey'
-          value: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : ''
         }
         {
           name: 'WEBSITE_RUN_FROM_PACKAGE'

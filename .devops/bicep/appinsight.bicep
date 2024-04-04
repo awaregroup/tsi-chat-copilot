@@ -1,23 +1,13 @@
-param resourcePrefix string
 param location string
+param resourcePrefix string
 param appServiceFrontendName string
-param appServiceMemoryPipelineName string
 
 resource appServiceFrontend 'Microsoft.Web/sites@2022-09-01' existing = {
   name: appServiceFrontendName
 }
 
-resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' existing = {
-  name: appServiceMemoryPipelineName
-}
-
-resource appInsightExtensionWeb 'Microsoft.Web/sites/siteextensions@2022-09-01' = {
+resource appInsightExtension 'Microsoft.Web/sites/siteextensions@2022-09-01' = {
   parent: appServiceFrontend
-  name: 'Microsoft.ApplicationInsights.AzureWebSites'
-}
-
-resource appInsightExtensionMemory 'Microsoft.Web/sites/siteextensions@2022-09-01' = {
-  parent: appServiceMemoryPipeline
   name: 'Microsoft.ApplicationInsights.AzureWebSites'
 }
 

@@ -581,11 +581,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
       }
       {
         name: 'KernelMemory:Services:AzureFormRecognizer:Endpoint'
-        value: ocrAccount.properties.endpoint
+        value: documentIntelligenceAccount.properties.endpoint
       }
       {
         name: 'KernelMemory:Services:AzureFormRecognizer:APIKey'
-        value: ocrAccount.listKeys().key1
+        value: documentIntelligenceAccount.listKeys().key1
       }
       {
         name: 'KernelMemory:Services:OpenAI:TextModel'
@@ -1118,7 +1118,7 @@ resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = if (d
   }
 }
 
-resource ocrAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
+resource documentIntelligenceAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
   name: 'cog-ocr-${uniqueName}'
   location: location
   sku: {

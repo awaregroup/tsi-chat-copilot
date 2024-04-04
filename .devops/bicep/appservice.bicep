@@ -1,5 +1,5 @@
-param resourcePrefix string
 param location string
+param resourcePrefix string
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: '${resourcePrefix}-asp'
@@ -23,28 +23,22 @@ resource appServiceFrontend 'Microsoft.Web/sites@2022-09-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-  }
-  identity: {
-    type: 'SystemAssigned'
-  }
-}
-
-output appServiceFrontendName string = appServiceFrontend.name
-
-resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' = {
-  name: '${resourcePrefix}-memorypipeline'
-  location: location
-  kind: 'app'
-  tags: {
-    skweb: '1'
-    applicationRole: 'memorypipeline'
-  }
-  properties: {
-    serverFarmId: appServicePlan.id
-    httpsOnly: true
-    // virtualNetworkSubnetId: memoryStore == 'Qdrant' ? virtualNetwork.properties.subnets[0].id : null
     siteConfig: {
-      healthCheckPath: '/healthz'
+      http20Enabled: true
+      alwaysOn: false
+      cors: {
+        allowedOrigins: [
+          'http://localhost:3000'
+          'https://localhost:3000'
+        ]
+        supportCredentials: true
+      }
+      detailedErrorLoggingEnabled: true
+      minTlsVersion: '1.2'
+      netFrameworkVersion: 'v6.0'
+      use32BitWorkerProcess: false
+      vnetRouteAllEnabled: true
+      webSocketsEnabled: true
     }
   }
   identity: {
@@ -52,4 +46,5 @@ resource appServiceMemoryPipeline 'Microsoft.Web/sites@2022-09-01' = {
   }
 }
 
-output appServiceMemoryPipelineName string = appServiceMemoryPipeline.name
+output appServiceFrontendName string = appServiceFrontend.name
+// output appServiceAppSettings array = appServiceFrontend.properties.siteConfig.appSettings

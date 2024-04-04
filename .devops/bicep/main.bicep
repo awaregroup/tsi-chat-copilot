@@ -79,7 +79,23 @@ module logResources './appinsight.bicep' = {
     resourcePrefix: resourcePrefix
     location: location
     appServiceFrontendName: webResources.outputs.appServiceFrontendName
-    appServiceMemoryPipelineName: webResources.outputs.appServiceMemoryPipelineName
+  }
+}
+
+module keyVault './keyvault.bicep' = {
+  name: 'KeyVault_Resources'
+  params: {
+    resourcePrefix: resourcePrefix
+    location: location
+    cosmosAccountName: cosmosResources.outputs.cosmosAccountName
+    aiSearchAccountName: aiResources.outputs.aiSearchAccountName
+    speechAccountName: aiResources.outputs.speechAccountName
+    documentIntelligenceAccountName: aiResources.outputs.documentIntelligenceAccountName
+    appServiceFrontendName: webResources.outputs.appServiceFrontendName
+    storageAccountName: storageResources.outputs.storageAccountName
+
+    //select openAI properties based on input param
+    azureOpenAIKey: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : aiResources.outputs.azureOpenAIEndpoint
   }
 }
 
@@ -92,23 +108,31 @@ module codeDeployResources './codedeployandconfig.bicep' = {
     azureAdInstance: azureAdInstance
     azureAdTenantId: azureAdTenantId
 
+    keyVaultName: keyVault.outputs.keyVaultName
     appServiceFrontendName: webResources.outputs.appServiceFrontendName
-    appServiceMemoryPipelineName: webResources.outputs.appServiceMemoryPipelineName
     appServiceFrontendPackageUri: appServiceFrontendPackageUri
-    appServiceMemoryPipelinePackageUri: appServiceMemoryPipelinePackageUri
+    // appServiceAppSettings: webResources.outputs.appServiceAppSettings
     storageAccountName: storageResources.outputs.storageAccountName
-    azureSearchAccountName: aiResources.outputs.azureSearchAccountName
-    // azureOpenAIAccountName: aiResources.outputs.azureOpenAIAccountName
+    storageAccountSecretName: keyVault.outputs.storageAccountSecretName
+    aiSearchAccountName: aiResources.outputs.aiSearchAccountName
+    aiSearchSecretName: keyVault.outputs.aiSearchSecretName
     appInsightsName: logResources.outputs.appInsightsName
-    azureOcrAccountName: aiResources.outputs.ocrAccountName
+    documentIntelligenceAccountName: aiResources.outputs.documentIntelligenceAccountName
+    documentIntelligenceSecretName: keyVault.outputs.documentIntelligenceSecretName
     cosmosAccountName: cosmosResources.outputs.cosmosAccountName
+    cosmosDbSecretName: keyVault.outputs.cosmosDbSecretName
     speechAccountName: aiResources.outputs.speechAccountName
 
-    useExternalAzureOpenAIEndpoint: useExternalAzureOpenAIEndpoint
-    externalAzureOpenAIDeploymentName: externalAzureOpenAIDeploymentName
-    externalAzureOpenAIEmbeddingDeploymentName: externalAzureOpenAIEmbeddingDeploymentName
-    externalAzureOpenAIEndpoint: externalAzureOpenAIEndpoint
-    externalAzureOpenAIKey: externalAzureOpenAIKey
+    azureOpenAIEmbeddingDeploymentName: useExternalAzureOpenAIEndpoint
+      ? externalAzureOpenAIEmbeddingDeploymentName
+      : aiResources.outputs.azureOpenAIEmbeddingDeploymentName
+    azureOpenAIEndpoint: useExternalAzureOpenAIEndpoint
+      ? externalAzureOpenAIEndpoint
+      : aiResources.outputs.azureOpenAIEndpoint
+    azureOpenAIDeploymentName: useExternalAzureOpenAIEndpoint
+      ? externalAzureOpenAIDeploymentName
+      : aiResources.outputs.azureOpenAIDeploymentName
+    azureOpenAIKeySecretName: keyVault.outputs.openAISecretName
   }
 }
 
@@ -116,10 +140,13 @@ module managedIdentityResources './managedidentity.bicep' = {
   name: 'Managed_Identity'
   params: {
     appServiceFrontendName: webResources.outputs.appServiceFrontendName
-    appServiceMemoryPipelineName: webResources.outputs.appServiceMemoryPipelineName
     cosmosAccountName: cosmosResources.outputs.cosmosAccountName
-    azureSearchAccountName: aiResources.outputs.azureSearchAccountName
+    aiSearchAccountName: aiResources.outputs.aiSearchAccountName
+
     storageAccountName: storageResources.outputs.storageAccountName
+    azureDocumentIntelligenceAccountName: aiResources.outputs.documentIntelligenceAccountName
+    azureSpeechAccountName: aiResources.outputs.speechAccountName
+    keyVaultName: keyVault.outputs.keyVaultName
   }
 }
 
