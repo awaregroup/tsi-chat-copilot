@@ -10,8 +10,8 @@ import { store } from './redux/app/store';
 
 import React from 'react';
 import { BackendServiceUrl } from './libs/services/BaseService';
-import { setAuthConfig, setUxConfig } from './redux/features/app/appSlice';
 import { UxConfig } from './libs/ux/UxHelper';
+import { setAuthConfig, setUxConfig } from './redux/features/app/appSlice';
 
 if (!localStorage.getItem('debug')) {
     localStorage.setItem('debug', `${Constants.debug.root}:*`);
@@ -45,12 +45,13 @@ export function renderApp() {
 
     fetch(new URL('authConfig', BackendServiceUrl))
         .then((response) => (response.ok ? (response.json() as Promise<AuthConfig>) : Promise.reject()))
-        .then((authConfig) => {
+        .then(async (authConfig) => {
             store.dispatch(setAuthConfig(authConfig));
 
             if (AuthHelper.isAuthAAD()) {
                 if (!msalInstance) {
                     msalInstance = new PublicClientApplication(AuthHelper.getMsalConfig(authConfig));
+                    await msalInstance.initialize();
                     void msalInstance.handleRedirectPromise().then((response) => {
                         if (response) {
                             msalInstance?.setActiveAccount(response.account);
