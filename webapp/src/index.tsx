@@ -29,12 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         root = ReactDOM.createRoot(container);
 
-        renderApp();
+        renderApp().catch((error) => { console.log(error); });
     }
 });
 
-export function renderApp() {
-    fetch(new URL('uxConfig', BackendServiceUrl))
+export async function renderApp() {
+    await fetch(new URL('uxConfig', BackendServiceUrl))
         .then((response) => (response.ok ? (response.json() as Promise<UxConfig>) : Promise.reject()))
         .then((uxConfig) => {
             store.dispatch(setUxConfig(uxConfig));
