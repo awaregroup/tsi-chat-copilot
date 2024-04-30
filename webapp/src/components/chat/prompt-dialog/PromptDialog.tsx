@@ -38,7 +38,6 @@ const useClasses = makeStyles({
         ...shorthands.padding(0),
         ...shorthands.margin(0),
         minWidth: 'auto',
-        marginLeft: 'auto', // align to right
     },
     text: {
         width: '100%',

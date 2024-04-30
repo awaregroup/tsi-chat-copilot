@@ -54,5 +54,6 @@ public sealed class FrontendOptions
     public bool PlansTabVisible { get; set; } = true;
     public bool ChatHistoryVisible { get; set; } = true;
     public bool PluginGalleryVisible { get; set; } = true;
-    public object PersonasTabVisible { get; set; } = true;
+    public bool PersonasTabVisible { get; set; } = true;
+    public bool PromptDetailVisible { get; set; } = true;
 }

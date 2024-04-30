@@ -102,6 +102,9 @@ const useClasses = makeStyles({
     rlhf: {
         marginLeft: 'auto',
     },
+    alignRight: {
+        marginLeft: 'auto', //align right
+    }
 });
 
 interface ChatHistoryItemProps {
@@ -114,7 +117,7 @@ export const ChatHistoryItem: React.FC<ChatHistoryItemProps> = ({ message, messa
     const chat = useChat();
 
     const { conversations, selectedId } = useAppSelector((state: RootState) => state.conversations);
-    const { activeUserInfo, features } = useAppSelector((state: RootState) => state.app);
+    const { activeUserInfo, features, uxConfig } = useAppSelector((state: RootState) => state.app);
     const [showCitationCards, setShowCitationCards] = useState(false);
 
     const isDefaultUser = message.userId === DefaultChatUser.id;
@@ -187,18 +190,20 @@ export const ChatHistoryItem: React.FC<ChatHistoryItemProps> = ({ message, messa
                 <div className={classes.header}>
                     {!isMe && <Text weight="semibold">{fullName}</Text>}
                     <Text className={classes.time}>{timestampToDateString(message.timestamp, true)}</Text>
-                    {isBot && <PromptDialog message={message} />}
-                    {isBot && message.prompt && (
-                        <Tooltip content={messagedCopied ? 'Copied' : 'Copy text'} relationship="label">
-                            <Button
-                                icon={messagedCopied ? <ClipboardTask20Regular /> : <Clipboard20Regular />}
-                                appearance="transparent"
-                                onClick={() => {
-                                    void copyOnClick();
-                                }}
-                            />
-                        </Tooltip>
-                    )}
+                    <div className={classes.alignRight}>
+                        {isBot && uxConfig.promptDetailVisible && <PromptDialog message={message} />}
+                        {isBot && message.prompt && (
+                            <Tooltip content={messagedCopied ? 'Copied' : 'Copy text'} relationship="label">
+                                <Button
+                                    icon={messagedCopied ? <ClipboardTask20Regular /> : <Clipboard20Regular />}
+                                    appearance="transparent"
+                                    onClick={() => {
+                                        void copyOnClick();
+                                    }}
+                                />
+                            </Tooltip>
+                            )}
+                    </div>
                 </div>
                 {content}
                 {showExtra && (

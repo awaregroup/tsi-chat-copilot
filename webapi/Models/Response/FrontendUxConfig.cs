@@ -74,5 +74,8 @@ public class FrontendUxConfig
     public bool PluginGalleryVisible { get; set; }
 
     [JsonPropertyName("personasTabVisible")]
-    public object PersonasTabVisible { get; set; }
+    public bool PersonasTabVisible { get; set; }
+
+    [JsonPropertyName("promptDetailVisible")]
+    public bool PromptDetailVisible { get; set; }
 }

@@ -128,6 +128,8 @@ public class ServiceInfoController : ControllerBase
             DocumentsTabVisible = this._frontendOptions.DocumentsTabVisible,
             GlobalDocumentsVisible = this._frontendOptions.GlobalDocumentsVisible,
             PlansTabVisible = this._frontendOptions.PlansTabVisible,
+            PersonasTabVisible = this._frontendOptions.PersonasTabVisible,
+            PromptDetailVisible = this._frontendOptions.PromptDetailVisible,
             ChatHistoryVisible = this._frontendOptions.ChatHistoryVisible,
             PluginGalleryVisible = this._frontendOptions.PluginGalleryVisible,
         };
