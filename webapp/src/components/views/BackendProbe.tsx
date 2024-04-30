@@ -86,7 +86,7 @@ export const BackendProbe: FC<IData> = ({ onBackendFound }) => {
                 <div className={classes.informativeView}>
                     <Title3>Connecting...</Title3>
                     <Spinner />
-                    <Body1>
+                    {process.env.NODE_ENV != "production" ? <><Body1>
                         This app expects to find a server running at <strong>{BackendServiceUrl}</strong>
                     </Body1>
                     <Body1>
@@ -101,7 +101,7 @@ export const BackendProbe: FC<IData> = ({ onBackendFound }) => {
                             <b>REACT_APP_BACKEND_URI</b>
                         </code>{' '}
                         variable set in your <b>webapp/.env</b> file
-                    </Body1>
+                    </Body1></>: null}
                 </div>
             )}
         </>
