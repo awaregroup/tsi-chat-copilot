@@ -208,14 +208,17 @@ public static class CopilotChatServiceExtensions
                     throw new InvalidOperationException("ChatStore:Cosmos is required when ChatStore:Type is 'Cosmos'");
                 }
 #pragma warning disable CA2000 // Dispose objects before losing scope - objects are singletons for the duration of the process and disposed when the process exits.
+                var connectionDetail = chatStoreConfig.Cosmos.Auth == AuthTypes.AzureIdentity ?
+                    chatStoreConfig.Cosmos.Endpoint : chatStoreConfig.Cosmos.ConnectionString;
+
                 chatSessionStorageContext = new CosmosDbContext<ChatSession>(
-                    chatStoreConfig.Cosmos.ConnectionString, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatSessionsContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatSessionsContainer);
                 chatMessageStorageContext = new CosmosDbCopilotChatMessageContext(
-                    chatStoreConfig.Cosmos.ConnectionString, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMessagesContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMessagesContainer);
                 chatMemorySourceStorageContext = new CosmosDbContext<MemorySource>(
-                    chatStoreConfig.Cosmos.ConnectionString, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMemorySourcesContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMemorySourcesContainer);
                 chatParticipantStorageContext = new CosmosDbContext<ChatParticipant>(
-                    chatStoreConfig.Cosmos.ConnectionString, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatParticipantsContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatParticipantsContainer);
 #pragma warning restore CA2000 // Dispose objects before losing scope
                 break;
             }

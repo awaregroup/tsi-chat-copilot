@@ -4,11 +4,24 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CopilotChat.WebApi.Options;
 
+public enum AuthTypes
+{
+    Unknown = -1,
+    AzureIdentity,
+    ConnectionString
+}
+
 /// <summary>
 /// Configuration settings for connecting to Azure CosmosDB.
 /// </summary>
 public class CosmosOptions
 {
+    /// <summary>
+    /// Defines whether to use Managed Identity or ConnectionString
+    /// </summary>
+    [Required, NotEmptyOrWhitespace]
+    public AuthTypes Auth { get; set; } = AuthTypes.Unknown;
+
     /// <summary>
     /// Gets or sets the Cosmos database name.
     /// </summary>
@@ -18,8 +31,15 @@ public class CosmosOptions
     /// <summary>
     /// Gets or sets the Cosmos connection string.
     /// </summary>
-    [Required, NotEmptyOrWhitespace]
+    [RequiredOnPropertyValue(nameof(AuthTypes), AuthTypes.ConnectionString)]
     public string ConnectionString { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the Cosmos endpoint.
+    /// </summary>
+    [RequiredOnPropertyValue(nameof(AuthTypes), AuthTypes.AzureIdentity)]
+    public string Endpoint { get; set; } = string.Empty;
+
 
     /// <summary>
     /// Gets or sets the Cosmos container for chat sessions.

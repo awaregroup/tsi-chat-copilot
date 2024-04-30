@@ -5,8 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Azure.Identity;
 using CopilotChat.WebApi.Models.Storage;
 using Microsoft.Azure.Cosmos;
+using RabbitMQ.Client.Logging;
 
 namespace CopilotChat.WebApi.Storage;
 
@@ -30,10 +32,11 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
     /// <summary>
     /// Initializes a new instance of the CosmosDbContext class.
     /// </summary>
-    /// <param name="connectionString">The CosmosDB connection string.</param>
+    /// <param name="connectionDetail">The CosmosDB connection string or endpoint url. Value depends on isManagedIdentity being set.</param>
     /// <param name="database">The CosmosDB database name.</param>
     /// <param name="container">The CosmosDB container name.</param>
-    public CosmosDbContext(string connectionString, string database, string container)
+    /// <param name="isManagedIdentity">Whether or not to authenticate using Managed Identity or a Connection String.</param>
+    public CosmosDbContext(string connectionDetail, string database, string container, bool isManagedIdentity = true)
     {
         // Configure JsonSerializerOptions
         var options = new CosmosClientOptions
@@ -43,7 +46,17 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
             },
         };
-        this._client = new CosmosClient(connectionString, options);
+
+        //handle auth type
+        if (isManagedIdentity == true)
+        {
+            this._client = new CosmosClient(connectionDetail, new DefaultAzureCredential(), options);
+        }
+        else
+        {
+            this._client = new CosmosClient(connectionDetail, options);
+        }
+
         this._container = this._client.GetContainer(database, container);
     }
 
