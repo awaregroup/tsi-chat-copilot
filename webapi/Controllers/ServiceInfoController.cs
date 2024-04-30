@@ -120,6 +120,7 @@ public class ServiceInfoController : ControllerBase
             CopilotName = this._frontendOptions.CopilotName,
             PrimaryColor = this._frontendOptions.PrimaryColor,
             SecondaryColor = this._frontendOptions.SecondaryColor,
+            HeaderTextColor = this._frontendOptions.HeaderTextColor,
             PageLogoUrl = this._frontendOptions.PageLogoUrl,
             FaviconUrl = this._frontendOptions.FaviconUrl,
             CopilotAvatarUrl = this._frontendOptions.CopilotAvatarUrl,

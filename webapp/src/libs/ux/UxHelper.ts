@@ -10,6 +10,7 @@ export interface UxConfig {
     copilotName: string;
     primaryColor: string;
     secondaryColor: string;
+    headerTextColor: string;
     pageLogoUrl: string;
     faviconUrl: string;
     copilotAvatarUrl: string;

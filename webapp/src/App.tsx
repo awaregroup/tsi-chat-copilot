@@ -174,11 +174,16 @@ const App = () => {
         }
 
         //brand colors
-        if (uxConfig.primaryColor) {
+        if (uxConfig.primaryColor && uxConfig.primaryColor.length > 0) {
             semanticKernelLightTheme.colorBrandForeground1 = uxConfig.primaryColor;
             semanticKernelLightTheme.colorBrandForeground2 = uxConfig.primaryColor;
             semanticKernelDarkTheme.colorBrandForeground1 = uxConfig.primaryColor;
             semanticKernelDarkTheme.colorBrandForeground2 = uxConfig.primaryColor;
+        }
+
+        if (uxConfig.headerTextColor && uxConfig.headerTextColor.length > 0) {
+            semanticKernelLightTheme.colorNeutralForegroundOnBrand = uxConfig.headerTextColor;
+            semanticKernelDarkTheme.colorNeutralForegroundOnBrand = uxConfig.headerTextColor;
         }
     }, [uxConfig]);
 

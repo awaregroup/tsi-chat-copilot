@@ -29,6 +29,7 @@ public sealed class FrontendOptions
     /// </summary>
     public string PrimaryColor { get; set; } = "#A53E63";
     public string SecondaryColor { get; set; } = "#A53E63";
+    public string HeaderTextColor { get; set; } = "#FFFFFF";
 
     /// <summary>
     /// Graphics / logos
