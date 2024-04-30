@@ -2,6 +2,8 @@
 
 using System;
 using System.Net.Http;
+using Azure.AI.OpenAI;
+using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -44,11 +46,23 @@ public sealed class SemanticKernelProvider
             case string y when y.Equals("AzureOpenAIText", StringComparison.OrdinalIgnoreCase):
                 var azureAIOptions = memoryOptions.GetServiceConfig<AzureOpenAIConfig>(configuration, "AzureOpenAIText");
 #pragma warning disable CA2000 // No need to dispose of HttpClient instances from IHttpClientFactory
-                builder.AddAzureOpenAIChatCompletion(
-                    azureAIOptions.Deployment,
-                    azureAIOptions.Endpoint,
-                    azureAIOptions.APIKey,
-                    httpClient: httpClientFactory.CreateClient());
+                if (azureAIOptions.Auth == AzureOpenAIConfig.AuthTypes.AzureIdentity)
+                {
+                    //instantiate an Azure OpenAI client with managed identity
+                    var azureOpenAIClient = new OpenAIClient(new Uri(azureAIOptions.Endpoint), new DefaultAzureCredential());
+
+                    builder.AddAzureOpenAIChatCompletion(
+                        azureAIOptions.Deployment,
+                        azureOpenAIClient);
+                }
+                else
+                {
+                    builder.AddAzureOpenAIChatCompletion(
+                        azureAIOptions.Deployment,
+                        azureAIOptions.Endpoint,
+                        azureAIOptions.APIKey,
+                        httpClient: httpClientFactory.CreateClient());
+                }
                 break;
 
             case string x when x.Equals("OpenAI", StringComparison.OrdinalIgnoreCase):
