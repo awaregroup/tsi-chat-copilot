@@ -81,4 +81,6 @@ public class FrontendUxConfig
 
     [JsonPropertyName("promptDetailVisible")]
     public bool PromptDetailVisible { get; set; }
+    [JsonPropertyName("userSettingsVisible")]
+    public bool UserSettingsVisible { get; set; }
 }

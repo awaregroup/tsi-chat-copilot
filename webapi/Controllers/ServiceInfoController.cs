@@ -133,6 +133,7 @@ public class ServiceInfoController : ControllerBase
             PromptDetailVisible = this._frontendOptions.PromptDetailVisible,
             ChatHistoryVisible = this._frontendOptions.ChatHistoryVisible,
             PluginGalleryVisible = this._frontendOptions.PluginGalleryVisible,
+            UserSettingsVisible = this._frontendOptions.UserSettingsVisible,
         };
 
         return this.Ok(response);

@@ -23,4 +23,5 @@ export interface UxConfig {
     promptDetailVisible: boolean;
     chatHistoryVisible: boolean;
     pluginGalleryVisible: boolean;
+    userSettingsVisible: boolean;
 }

@@ -42,7 +42,7 @@ export const UserSettingsMenu: FC<IUserSettingsProps> = ({ setLoadingState }) =>
     const classes = useClasses();
     const { instance } = useMsal();
 
-    const { activeUserInfo, features } = useAppSelector((state: RootState) => state.app);
+    const { activeUserInfo, features, uxConfig } = useAppSelector((state: RootState) => state.app);
 
     const [openSettingsDialog, setOpenSettingsDialog] = useState(false);
 
@@ -86,14 +86,15 @@ export const UserSettingsMenu: FC<IUserSettingsProps> = ({ setLoadingState }) =>
                                 avatar={{ color: 'colorful' }}
                             />
                             <MenuDivider />
-                            <MenuItem
-                                data-testid="settingsMenuItem"
-                                onClick={() => {
-                                    setOpenSettingsDialog(true);
-                                }}
-                            >
-                                Settings
-                            </MenuItem>
+                            {uxConfig.userSettingsVisible ? 
+                                <MenuItem
+                                    data-testid="settingsMenuItem"
+                                    onClick={() => {
+                                        setOpenSettingsDialog(true);
+                                    }}
+                                >
+                                    Settings
+                                </MenuItem>: null}
                             <MenuItem data-testid="logOutMenuButton" onClick={onLogout}>
                                 Sign out
                             </MenuItem>
