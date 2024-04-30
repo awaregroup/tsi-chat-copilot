@@ -87,12 +87,7 @@ module keyVault './keyvault.bicep' = {
   params: {
     resourcePrefix: resourcePrefix
     location: location
-    cosmosAccountName: cosmosResources.outputs.cosmosAccountName
-    aiSearchAccountName: aiResources.outputs.aiSearchAccountName
-    speechAccountName: aiResources.outputs.speechAccountName
-    documentIntelligenceAccountName: aiResources.outputs.documentIntelligenceAccountName
-    appServiceFrontendName: webResources.outputs.appServiceFrontendName
-    storageAccountName: storageResources.outputs.storageAccountName
+    aiSpeechAccountName: aiResources.outputs.aiSpeechAccountName
 
     //select openAI properties based on input param
     azureOpenAIKey: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : aiResources.outputs.azureOpenAIEndpoint
@@ -113,15 +108,12 @@ module codeDeployResources './codedeployandconfig.bicep' = {
     appServiceFrontendPackageUri: appServiceFrontendPackageUri
     // appServiceAppSettings: webResources.outputs.appServiceAppSettings
     storageAccountName: storageResources.outputs.storageAccountName
-    storageAccountSecretName: keyVault.outputs.storageAccountSecretName
     aiSearchAccountName: aiResources.outputs.aiSearchAccountName
-    aiSearchSecretName: keyVault.outputs.aiSearchSecretName
     appInsightsName: logResources.outputs.appInsightsName
     documentIntelligenceAccountName: aiResources.outputs.documentIntelligenceAccountName
-    documentIntelligenceSecretName: keyVault.outputs.documentIntelligenceSecretName
     cosmosAccountName: cosmosResources.outputs.cosmosAccountName
-    cosmosDbSecretName: keyVault.outputs.cosmosDbSecretName
-    speechAccountName: aiResources.outputs.speechAccountName
+    aiSpeechAccountName: aiResources.outputs.aiSpeechAccountName
+    aiSpeechAccountKeySecretName: keyVault.outputs.aiSpeechAccountKeySecretName
 
     azureOpenAIEmbeddingDeploymentName: useExternalAzureOpenAIEndpoint
       ? externalAzureOpenAIEmbeddingDeploymentName
@@ -145,7 +137,7 @@ module managedIdentityResources './managedidentity.bicep' = {
 
     storageAccountName: storageResources.outputs.storageAccountName
     azureDocumentIntelligenceAccountName: aiResources.outputs.documentIntelligenceAccountName
-    azureSpeechAccountName: aiResources.outputs.speechAccountName
+    azureSpeechAccountName: aiResources.outputs.aiSpeechAccountName
     keyVaultName: keyVault.outputs.keyVaultName
   }
 }

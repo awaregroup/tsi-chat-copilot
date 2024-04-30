@@ -3,16 +3,13 @@ param appServiceFrontendName string
 // param appServiceAppSettings array
 param appServiceFrontendPackageUri string
 param storageAccountName string
-param storageAccountSecretName string
 param aiSearchAccountName string
-param aiSearchSecretName string
 param appInsightsName string
 param documentIntelligenceAccountName string
-param documentIntelligenceSecretName string
 param cosmosAccountName string
-param cosmosDbSecretName string
-param speechAccountName string
+param aiSpeechAccountName string
 param keyVaultName string
+param aiSpeechAccountKeySecretName string
 
 param azureAdInstance string
 param azureAdTenantId string
@@ -24,8 +21,8 @@ param azureOpenAIDeploymentName string
 param azureOpenAIEmbeddingDeploymentName string
 param azureOpenAIKeySecretName string
 
-resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' existing = {
-  name: speechAccountName
+resource aiSpeechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' existing = {
+  name: aiSpeechAccountName
 }
 
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' existing = {
@@ -110,6 +107,16 @@ resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
           name: 'ChatStore__Type'
           value: 'cosmos'
         }
+
+        //TODO: update these settings to use the outputs from the cosmos bicep file
+        {
+          name: 'ChatStore__Cosmos__Auth'
+          value: 'AzureIdentity'
+        }
+        {
+          name: 'ChatStore__Cosmos__Endpoint'
+          value: cosmosAccount.properties.documentEndpoint
+        }
         {
           name: 'ChatStore__Cosmos__Database'
           value: 'CopilotChat'
@@ -130,19 +137,15 @@ resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
           name: 'ChatStore__Cosmos__ChatParticipantsContainer'
           value: 'chatparticipants'
         }
-        {
-          name: 'ChatStore__Cosmos__ConnectionString'
-          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${cosmosDbSecretName})'
-        }
 
         //azure speech
         {
           name: 'AzureSpeech__Region'
-          value: speechAccount.location
+          value: aiSpeechAccount.location
         }
         {
           name: 'AzureSpeech__Key'
-          value: speechAccount.listKeys().key1
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${aiSpeechAccountKeySecretName})'
         }
 
         //kestrel (internal .net webserver)
@@ -216,15 +219,11 @@ resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'KernelMemory__Services__AzureBlobs__Auth'
-          value: 'APIKey'
+          value: 'AzureIdentity'
         }
         {
           name: 'KernelMemory__Services__AzureBlobs__Account'
           value: storageAccount.name
-        }
-        {
-          name: 'KernelMemory__Services__AzureBlobs__ConnectionString'
-          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${storageAccountSecretName})'
         }
         {
           name: 'KernelMemory__Services__AzureBlobs__Container'
@@ -232,31 +231,19 @@ resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'KernelMemory__Services__AzureQueue__Auth'
-          value: 'APIKey'
-        }
-        {
-          name: 'KernelMemory__Services__AzureQueue__ConnectionString'
-          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${storageAccountSecretName})'
+          value: 'AzureIdentity'
         }
         {
           name: 'KernelMemory__Services__AzureCognitiveSearch__Auth'
-          value: 'APIKey'
+          value: 'AzureIdentity'
         }
         {
           name: 'KernelMemory__Services__AzureCognitiveSearch__Endpoint'
           value: 'https://${aiSearchAccount.name}.search.windows.net'
         }
         {
-          name: 'KernelMemory__Services__AzureCognitiveSearch__APIKey'
-          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${aiSearchSecretName})'
-        }
-        // {
-        //   name: 'KernelMemory__Services__Qdrant__Endpoint'
-        //   value: memoryStore == 'Qdrant' ? 'https://${appServiceQdrant.properties.defaultHostName}' : ''
-        // }
-        {
           name: 'KernelMemory__Services__AzureOpenAIText__Auth'
-          value: 'ApiKey'
+          value: 'APIKey'
         }
         {
           name: 'KernelMemory__Services__AzureOpenAIText__Endpoint'
@@ -272,7 +259,7 @@ resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
         }
         {
           name: 'KernelMemory__Services__AzureOpenAIEmbedding__Auth'
-          value: 'ApiKey'
+          value: 'APIKey'
         }
         {
           name: 'KernelMemory__Services__AzureOpenAIEmbedding__Endpoint'
@@ -287,24 +274,8 @@ resource appServiceFrontendConfig 'Microsoft.Web/sites/config@2022-09-01' = {
           value: azureOpenAIEmbeddingDeploymentName
         }
         {
-          name: 'KernelMemory__Services__OpenAI__TextModel'
-          value: azureOpenAIDeploymentName
-        }
-        {
-          name: 'KernelMemory__Services__OpenAI__EmbeddingModel'
-          value: azureOpenAIEmbeddingDeploymentName
-        }
-        {
-          name: 'KernelMemory__Services__OpenAI__APIKey'
-          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${azureOpenAIKeySecretName})'
-        }
-        {
           name: 'KernelMemory__Services__AzureFormRecognizer__Auth'
-          value: 'APIKey'
-        }
-        {
-          name: 'KernelMemory__Services__AzureFormRecognizer__APIKey'
-          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${documentIntelligenceSecretName})'
+          value: 'AzureIdentity'
         }
         {
           name: 'KernelMemory__Services__AzureFormRecognizer__Endpoint'

@@ -5,7 +5,7 @@ param useExternalAzureOpenAIEndpoint bool
 //========================================================
 //Azure AI Speech Service
 //========================================================
-resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
+resource aiSpeechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
   name: '${resourcePrefix}-speech'
   location: location
   sku: {
@@ -21,7 +21,7 @@ resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
   }
 }
 
-output speechAccountName string = speechAccount.name
+output aiSpeechAccountName string = aiSpeechAccount.name
 
 //========================================================
 //Azure AI Document Intelligence
