@@ -44,16 +44,16 @@ param aiEndpoint string = ''
 @description('Azure OpenAI or OpenAI API key')
 param aiApiKey string
 
-@description('Azure AD client ID for the backend web API')
+@description('Azure Entra client ID for the backend web API')
 param webApiClientId string
 
-@description('Azure AD client ID for the frontend')
+@description('Azure Entra client ID for the frontend app registration')
 param frontendClientId string
 
-@description('Azure AD tenant ID for authenticating users')
+@description('Azure Entra tenant ID for authenticating users')
 param azureAdTenantId string
 
-@description('Azure AD cloud instance for authenticating users')
+@description('Azure Entra cloud instance for authenticating users')
 param azureAdInstance string = environment().authentication.loginEndpoint
 
 @description('Whether to deploy a new Azure OpenAI instance')
