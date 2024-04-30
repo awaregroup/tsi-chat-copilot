@@ -173,16 +173,17 @@ export const ChatWindow: React.FC = () => {
                                     >
                                         Plans
                                     </Tab> : null}
-                                <Tab
-                                    data-testid="personaTab"
-                                    id="persona"
-                                    value="persona"
-                                    icon={<Person16Regular />}
-                                    aria-label="Persona Tab"
-                                    title="Persona Tab"
-                                >
-                                    Persona
-                                </Tab>
+                                {uxConfig.personasTabVisible ?
+                                    <Tab
+                                        data-testid="personaTab"
+                                        id="persona"
+                                        value="persona"
+                                        icon={<Person16Regular />}
+                                        aria-label="Persona Tab"
+                                        title="Persona Tab"
+                                    >
+                                        Persona
+                                    </Tab> : null}
                             </>
                         )}
                     </TabList>

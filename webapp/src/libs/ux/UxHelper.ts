@@ -18,6 +18,7 @@ export interface UxConfig {
     documentsTabVisible: boolean;
     globalDocumentsVisible: boolean;
     plansTabVisible: boolean;
+    personasTabVisible: boolean;
     chatHistoryVisible: boolean;
     pluginGalleryVisible: boolean;
 }
