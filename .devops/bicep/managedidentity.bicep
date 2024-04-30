@@ -38,17 +38,14 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
 //cosmos db managed identity role assignments
 //========================================================
 
-resource cosmosDbAccountContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  scope: cosmosAccount
-  name: '5bd9cd88-fe45-4216-938b-f97437e15450'
-}
-
-resource cosmosDbAccountContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(cosmosAccount.id, cosmosDbAccountContributor.id, appServiceFrontend.id)
-  scope: cosmosAccount
+var cosmosDbBuiltInDataContributorRoleId = '00000000-0000-0000-0000-000000000002'
+resource cosmosDbBuiltInDataContributorAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-04-15' = {
+  name: guid(cosmosAccount.id, cosmosDbBuiltInDataContributorRoleId, appServiceFrontend.id)
+  parent: cosmosAccount
   properties: {
-    roleDefinitionId: cosmosDbAccountContributor.id
     principalId: appServiceFrontend.identity.principalId
+    roleDefinitionId: '${cosmosAccount.id}/sqlRoleDefinitions/${cosmosDbBuiltInDataContributorRoleId}'
+    scope: cosmosAccount.id
   }
 }
 

@@ -7,13 +7,15 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   kind: 'GlobalDocumentDB'
   properties: {
     consistencyPolicy: { defaultConsistencyLevel: 'Session' }
-    locations: [ {
+    locations: [
+      {
         locationName: location
         failoverPriority: 0
         isZoneRedundant: false
       }
     ]
     databaseAccountOfferType: 'Standard'
+    disableLocalAuth: true
   }
   identity: {
     type: 'SystemAssigned'
