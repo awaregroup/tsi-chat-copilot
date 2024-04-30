@@ -30,7 +30,7 @@ export const BackendProbe: FC<IData> = ({ onBackendFound }) => {
             const onBackendFoundWithAuthCheck = () => {
                 if (!AuthHelper.getAuthConfig()) {
                     // if we don't have the auth config, re-render the app:
-                    renderApp();
+                    renderApp().catch((error) => { console.error(error); });
                 } else {
                     // otherwise, we can load as normal
                     onBackendFound();
@@ -86,22 +86,24 @@ export const BackendProbe: FC<IData> = ({ onBackendFound }) => {
                 <div className={classes.informativeView}>
                     <Title3>Connecting...</Title3>
                     <Spinner />
-                    {process.env.NODE_ENV != "production" ? <><Body1>
-                        This app expects to find a server running at <strong>{BackendServiceUrl}</strong>
-                    </Body1>
-                    <Body1>
-                        To run the server locally, use Visual Studio, Visual Studio Code, or type the following command:{' '}
-                        <code>
-                            <strong>dotnet run</strong>
-                        </code>
-                    </Body1>
-                    <Body1>
-                        If running locally, ensure that you have the{' '}
-                        <code>
-                            <b>REACT_APP_BACKEND_URI</b>
-                        </code>{' '}
-                        variable set in your <b>webapp/.env</b> file
-                    </Body1></>: null}
+                        {process.env.NODE_ENV != "production" ? <>
+                            <Body1>
+                                This app expects to find a server running at <strong>{BackendServiceUrl}</strong>
+                            </Body1>
+                            <Body1>
+                                To run the server locally, use Visual Studio, Visual Studio Code, or type the following command:{' '}
+                                <code>
+                                    <strong>dotnet run</strong>
+                                </code>
+                            </Body1>
+                            <Body1>
+                                If running locally, ensure that you have the{' '}
+                                <code>
+                                    <b>REACT_APP_BACKEND_URI</b>
+                                </code>{' '}
+                                variable set in your <b>webapp/.env</b> file
+                            </Body1>
+                        </> : null}
                 </div>
             )}
         </>
