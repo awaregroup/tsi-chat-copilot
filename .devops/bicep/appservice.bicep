@@ -25,7 +25,7 @@ resource appServiceFrontend 'Microsoft.Web/sites@2022-09-01' = {
     httpsOnly: true
     siteConfig: {
       http20Enabled: true
-      alwaysOn: false
+      alwaysOn: true
       cors: {
         allowedOrigins: [
           'http://localhost:3000'
