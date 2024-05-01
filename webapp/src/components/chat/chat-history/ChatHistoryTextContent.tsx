@@ -22,7 +22,14 @@ export const ChatHistoryTextContent: React.FC<ChatHistoryTextContentProps> = ({ 
 
     return (
         <div className={classes.content}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                a: props => {
+                    if (props.href === undefined) return <></>;
+                    
+                    // enable links to open in new tab
+                    return  <a href={props.href} target="_blank" rel="noreferrer">{props.children}</a> 
+                }
+            }}>{content}</ReactMarkdown>
         </div>
     );
 };
