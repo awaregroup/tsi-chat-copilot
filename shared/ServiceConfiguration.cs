@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.KernelMemory;
@@ -130,7 +131,7 @@ internal sealed class ServiceConfiguration
                 case string y1 when y1.Equals("AzureQueue", StringComparison.OrdinalIgnoreCase):
                 case string y2 when y2.Equals("AzureQueues", StringComparison.OrdinalIgnoreCase):
                     // Check 2 keys for backward compatibility
-                    builder.Services.AddAzureQueuesOrchestration(this.GetServiceConfig<AzureQueuesConfig>("AzureQueue"));
+                    builder.Services.AddAzureQueuesOrchestration(this.GetServiceConfig<AzureQueuesConfig>("AzureQueue", "AzureQueues"));
                     break;
 
                 case string y when y.Equals("RabbitMQ", StringComparison.OrdinalIgnoreCase):
@@ -156,8 +157,7 @@ internal sealed class ServiceConfiguration
             case string x1 when x1.Equals("AzureBlob", StringComparison.OrdinalIgnoreCase):
             case string x2 when x2.Equals("AzureBlobs", StringComparison.OrdinalIgnoreCase):
                 // Check 2 keys for backward compatibility
-                builder.Services.AddAzureBlobsAsContentStorage(this.GetServiceConfig<AzureBlobsConfig>("AzureBlobs")
-                                                               ?? this.GetServiceConfig<AzureBlobsConfig>("AzureBlob"));
+                builder.Services.AddAzureBlobsAsContentStorage(this.GetServiceConfig<AzureBlobsConfig>("AzureBlobs", "AzureBlob"));
                 break;
 
             case string x when x.Equals("SimpleFileStorage", StringComparison.OrdinalIgnoreCase):
@@ -203,7 +203,7 @@ internal sealed class ServiceConfiguration
                 case string y when y.Equals("AzureOpenAIEmbedding", StringComparison.OrdinalIgnoreCase):
                 {
                     var instance = this.GetServiceInstance<ITextEmbeddingGenerator>(builder,
-                        s => s.AddAzureOpenAIEmbeddingGeneration(this.GetServiceConfig<AzureOpenAIConfig>("AzureOpenAIEmbedding")));
+                        s => s.AddAzureOpenAIEmbeddingGeneration(this.GetServiceConfig<AzureOpenAIConfig>("AzureOpenAI", "AzureOpenAIEmbedding")));
                     builder.AddIngestionEmbeddingGenerator(instance);
                     break;
                 }
@@ -239,10 +239,11 @@ internal sealed class ServiceConfiguration
                     // NOOP - allow custom implementations, via WithCustomMemoryDb()
                     break;
 
-                case string x when x.Equals("AzureAISearch", StringComparison.OrdinalIgnoreCase):
+                case string x when x.Equals("AzureCognitiveSearch", StringComparison.OrdinalIgnoreCase):
+                case string y when y.Equals("AzureAISearch", StringComparison.OrdinalIgnoreCase):
                 {
                     var instance = this.GetServiceInstance<IMemoryDb>(builder,
-                        s => s.AddAzureAISearchAsMemoryDb(this.GetServiceConfig<AzureAISearchConfig>("AzureAISearch"))
+                        s => s.AddAzureAISearchAsMemoryDb(this.GetServiceConfig<AzureAISearchConfig>("AzureAISearch", "AzureCognitiveSearch"))
                     );
                     builder.AddIngestionMemoryDb(instance);
                     break;
@@ -309,7 +310,7 @@ internal sealed class ServiceConfiguration
         {
             case string x when x.Equals("AzureOpenAI", StringComparison.OrdinalIgnoreCase):
             case string y when y.Equals("AzureOpenAIEmbedding", StringComparison.OrdinalIgnoreCase):
-                builder.Services.AddAzureOpenAIEmbeddingGeneration(this.GetServiceConfig<AzureOpenAIConfig>("AzureOpenAIEmbedding"));
+                builder.Services.AddAzureOpenAIEmbeddingGeneration(this.GetServiceConfig<AzureOpenAIConfig>("AzureOpenAIEmbedding", "AzureOpenAI"));
                 break;
 
             case string x when x.Equals("OpenAI", StringComparison.OrdinalIgnoreCase):
@@ -327,8 +328,9 @@ internal sealed class ServiceConfiguration
         // Retrieval Memory DB - IMemoryDb interface
         switch (this._memoryConfiguration.Retrieval.MemoryDbType)
         {
+            case string y when y.Equals("AzureCognitiveSearch", StringComparison.OrdinalIgnoreCase):
             case string x when x.Equals("AzureAISearch", StringComparison.OrdinalIgnoreCase):
-                builder.Services.AddAzureAISearchAsMemoryDb(this.GetServiceConfig<AzureAISearchConfig>("AzureAISearch"));
+                builder.Services.AddAzureAISearchAsMemoryDb(this.GetServiceConfig<AzureAISearchConfig>("AzureAISearch", "AzureCognitiveSearch"));
                 break;
 
             case string x when x.Equals("Qdrant", StringComparison.OrdinalIgnoreCase):
@@ -362,9 +364,9 @@ internal sealed class ServiceConfiguration
         // Text generation
         switch (this._memoryConfiguration.TextGeneratorType)
         {
-            case string x when x.Equals("AzureOpenAI", StringComparison.OrdinalIgnoreCase):
-            case string y when y.Equals("AzureOpenAIText", StringComparison.OrdinalIgnoreCase):
-                builder.Services.AddAzureOpenAITextGeneration(this.GetServiceConfig<AzureOpenAIConfig>("AzureOpenAIText"));
+            case string y when y.Equals("AzureOpenAI", StringComparison.OrdinalIgnoreCase):
+            case string x when x.Equals("AzureOpenAIText", StringComparison.OrdinalIgnoreCase):
+                builder.Services.AddAzureOpenAITextGeneration(this.GetServiceConfig<AzureOpenAIConfig>("AzureOpenAIText", "AzureOpenAI"));
                 break;
 
             case string x when x.Equals("OpenAI", StringComparison.OrdinalIgnoreCase):
@@ -386,8 +388,10 @@ internal sealed class ServiceConfiguration
             case string x when x.Equals("None", StringComparison.OrdinalIgnoreCase):
                 break;
 
+            case string z when z.Equals("AzureFormsRecognizer", StringComparison.OrdinalIgnoreCase):
+            case string y when y.Equals("AzureFormRecognizer", StringComparison.OrdinalIgnoreCase):
             case string x when x.Equals("AzureAIDocIntel", StringComparison.OrdinalIgnoreCase):
-                builder.Services.AddAzureAIDocIntel(this.GetServiceConfig<AzureAIDocIntelConfig>("AzureAIDocIntel"));
+                builder.Services.AddAzureAIDocIntel(this.GetServiceConfig<AzureAIDocIntelConfig>("AzureAIDocIntel", "AzureFormRecognizer", "AzureFormsRecognizer"));
                 break;
 
             default:
@@ -506,8 +510,24 @@ internal sealed class ServiceConfiguration
     /// <param name="serviceName">Name of the dependency</param>
     /// <typeparam name="T">Type of configuration to return</typeparam>
     /// <returns>Configuration instance, settings for the dependency specified</returns>
-    private T GetServiceConfig<T>(string serviceName)
+    private T GetServiceConfig<T>(params string[] serviceNames)
     {
-        return this._memoryConfiguration.GetServiceConfig<T>(this._rawAppSettings, serviceName);
+        for (int i = 0; i < serviceNames.Length; i++)
+        {
+            try
+            {
+                var ret = this._memoryConfiguration.GetServiceConfig<T>(this._rawAppSettings, serviceNames[i]);
+                if (ret.Equals(default(T)) == false && ret != null)
+                {
+                    return ret;
+                }
+            }
+            catch (ConfigurationException)
+            {
+                continue;
+            }
+        }
+
+        throw new ConfigurationException("The configuration names " + string.Join(", ", serviceNames) + " could not be found.");
     }
 }

@@ -45,7 +45,7 @@ public static class MemoryStoreTypeExtensions
     public static MemoryStoreType GetMemoryStoreType(this KernelMemoryConfig memoryOptions, IConfiguration configuration)
     {
         var type = memoryOptions.Retrieval.MemoryDbType;
-        if (type.Equals("AzureAISearch", StringComparison.OrdinalIgnoreCase))
+        if (type.Equals("AzureAISearch", StringComparison.OrdinalIgnoreCase) || type.Equals("AzureCognitiveSearch", StringComparison.OrdinalIgnoreCase))
         {
             return MemoryStoreType.AzureAISearch;
         }
