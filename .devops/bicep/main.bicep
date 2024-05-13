@@ -24,16 +24,12 @@ param azureAdTenantId string
 @description('Location for application code to deploy')
 param appServiceFrontendPackageUri string = 'https://aware.to/tsi/frontendpackageuri'
 
-@description('Location for application code to deploy')
-param appServiceMemoryPipelinePackageUri string = 'https://aware.to/tsi/memorypipelinepackageuri'
-
 @description('Resource location')
 param location string = resourceGroup().location
 
-param useExternalAzureOpenAIEndpoint bool = false
 param externalAzureOpenAIEndpoint string = ''
-param externalAzureOpenAIDeploymentName string = ''
-param externalAzureOpenAIEmbeddingDeploymentName string = ''
+param externalAzureOpenAICompletionDeploymentName string = 'gpt-4-turbo'
+param externalAzureOpenAIEmbeddingDeploymentName string = 'text-embedding-ada-002'
 param externalAzureOpenAIKey string = ''
 
 @description('Hash for the deployment')
@@ -48,12 +44,11 @@ module storageResources './storage.bicep' = {
   }
 }
 
-module aiResources './ai.bicep' = {
+module aiResources './aiservices.bicep' = {
   name: 'AI_Resources'
   params: {
     resourcePrefix: resourcePrefix
     location: location
-    useExternalAzureOpenAIEndpoint: useExternalAzureOpenAIEndpoint
   }
 }
 
@@ -82,6 +77,7 @@ module logResources './appinsight.bicep' = {
   }
 }
 
+//only deploy keyvault if its an external resource
 module keyVault './keyvault.bicep' = {
   name: 'KeyVault_Resources'
   params: {
@@ -90,14 +86,13 @@ module keyVault './keyvault.bicep' = {
     aiSpeechAccountName: aiResources.outputs.aiSpeechAccountName
 
     //select openAI properties based on input param
-    azureOpenAIKey: useExternalAzureOpenAIEndpoint ? externalAzureOpenAIKey : aiResources.outputs.azureOpenAIEndpoint
+    azureOpenAIKey: externalAzureOpenAIKey
   }
 }
 
 module codeDeployResources './codedeployandconfig.bicep' = {
   name: 'Code_Deploy'
   params: {
-    location: location
     azureAdBackendClientId: azureAdBackendClientId
     azureAdFrontendClientId: azureAdFrontendClientId
     azureAdInstance: azureAdInstance
@@ -115,15 +110,11 @@ module codeDeployResources './codedeployandconfig.bicep' = {
     aiSpeechAccountName: aiResources.outputs.aiSpeechAccountName
     aiSpeechAccountKeySecretName: keyVault.outputs.aiSpeechAccountKeySecretName
 
-    azureOpenAIEmbeddingDeploymentName: useExternalAzureOpenAIEndpoint
-      ? externalAzureOpenAIEmbeddingDeploymentName
-      : aiResources.outputs.azureOpenAIEmbeddingDeploymentName
-    azureOpenAIEndpoint: useExternalAzureOpenAIEndpoint
-      ? externalAzureOpenAIEndpoint
-      : aiResources.outputs.azureOpenAIEndpoint
-    azureOpenAIDeploymentName: useExternalAzureOpenAIEndpoint
-      ? externalAzureOpenAIDeploymentName
-      : aiResources.outputs.azureOpenAIDeploymentName
+    azureOpenAIEmbeddingDeploymentName: externalAzureOpenAIEmbeddingDeploymentName
+    azureOpenAICompletionDeploymentName: externalAzureOpenAICompletionDeploymentName
+    azureOpenAIPlannerDeploymentName: externalAzureOpenAICompletionDeploymentName
+
+    azureOpenAIEndpoint: externalAzureOpenAIEndpoint
     azureOpenAIKeySecretName: keyVault.outputs.openAISecretName
   }
 }

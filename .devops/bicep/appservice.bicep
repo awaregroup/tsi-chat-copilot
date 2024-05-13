@@ -39,6 +39,8 @@ resource appServiceFrontend 'Microsoft.Web/sites@2022-09-01' = {
       use32BitWorkerProcess: false
       vnetRouteAllEnabled: true
       webSocketsEnabled: true
+
+      healthCheckPath: '/healthz'
     }
   }
   identity: {

@@ -10,8 +10,9 @@ resource aiSpeechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' exist
 
 //=================================================================================================
 
+var proposedKeyVaultName = '${resourcePrefix}-kv'
 resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
-  name: '${resourcePrefix}-kv'
+  name: length(proposedKeyVaultName) > 24 ? substring(proposedKeyVaultName, 0, 24) : proposedKeyVaultName
   location: location
   properties: {
     enabledForDeployment: false

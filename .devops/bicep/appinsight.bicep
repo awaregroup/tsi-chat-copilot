@@ -12,7 +12,7 @@ resource appInsightExtension 'Microsoft.Web/sites/siteextensions@2022-09-01' = {
 }
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: '${resourcePrefix}-la'
+  name: '${resourcePrefix}-logs'
   location: location
   properties: {
     sku: {

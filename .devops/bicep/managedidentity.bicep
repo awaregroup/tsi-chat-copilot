@@ -131,7 +131,7 @@ resource speechServiceContributorRoleAssignment 'Microsoft.Authorization/roleAss
 }
 
 //========================================================
-//speech managed identity role assignments
+//doc intelligence managed identity role assignments
 //========================================================
 
 resource documentIntelligenceServiceContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
