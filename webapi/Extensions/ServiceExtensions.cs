@@ -208,17 +208,18 @@ public static class CopilotChatServiceExtensions
                     throw new InvalidOperationException("ChatStore:Cosmos is required when ChatStore:Type is 'Cosmos'");
                 }
 #pragma warning disable CA2000 // Dispose objects before losing scope - objects are singletons for the duration of the process and disposed when the process exits.
-                var connectionDetail = chatStoreConfig.Cosmos.Auth == AuthTypes.AzureIdentity ?
+                var isManagedIdentity = chatStoreConfig.Cosmos.Auth == AuthTypes.AzureIdentity;
+                var connectionDetail = isManagedIdentity == true ?
                     chatStoreConfig.Cosmos.Endpoint : chatStoreConfig.Cosmos.ConnectionString;
 
                 chatSessionStorageContext = new CosmosDbContext<ChatSession>(
-                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatSessionsContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatSessionsContainer, isManagedIdentity);
                 chatMessageStorageContext = new CosmosDbCopilotChatMessageContext(
-                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMessagesContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMessagesContainer, isManagedIdentity);
                 chatMemorySourceStorageContext = new CosmosDbContext<MemorySource>(
-                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMemorySourcesContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatMemorySourcesContainer, isManagedIdentity);
                 chatParticipantStorageContext = new CosmosDbContext<ChatParticipant>(
-                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatParticipantsContainer);
+                    connectionDetail, chatStoreConfig.Cosmos.Database, chatStoreConfig.Cosmos.ChatParticipantsContainer, isManagedIdentity);
 #pragma warning restore CA2000 // Dispose objects before losing scope
                 break;
             }

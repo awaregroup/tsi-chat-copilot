@@ -142,11 +142,12 @@ public class CosmosDbCopilotChatMessageContext : CosmosDbContext<CopilotChatMess
     /// <summary>
     /// Initializes a new instance of the CosmosDbCopilotChatMessageContext class.
     /// </summary>
-    /// <param name="connectionString">The CosmosDB connection string.</param>
+    /// <param name="connectionDetail">The CosmosDB connection string or endpoint url. Value depends on isManagedIdentity being set.</param>
     /// <param name="database">The CosmosDB database name.</param>
     /// <param name="container">The CosmosDB container name.</param>
-    public CosmosDbCopilotChatMessageContext(string connectionString, string database, string container) :
-        base(connectionString, database, container)
+    /// <param name="isManagedIdentity">Whether or not to authenticate using Managed Identity or a Connection String.</param>
+    public CosmosDbCopilotChatMessageContext(string connectionDetail, string database, string container, bool isManagedIdentity = true) :
+        base(connectionDetail, database, container, isManagedIdentity)
     {
     }
 
