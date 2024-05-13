@@ -24,17 +24,17 @@ param azureAdTenantId string
 @description('Location for application code to deploy')
 param appServiceFrontendPackageUri string = 'https://aware.to/tsi/frontendpackageuri'
 
-@description('Resource location')
-param location string = resourceGroup().location
-
+//azure open ai settings
 param externalAzureOpenAIEndpoint string = ''
+param externalAzureOpenAIKey string = ''
 param externalAzureOpenAICompletionDeploymentName string = 'gpt-4-turbo'
 param externalAzureOpenAIEmbeddingDeploymentName string = 'text-embedding-ada-002'
-param externalAzureOpenAIKey string = ''
 
 @description('Hash for the deployment')
 var uniqueStr = uniqueString(subscription().id, resourceGroup().id, 'chatcopilot')
 var resourcePrefix = toLower('${organisationCode}-${environment}-${applicationName}${(includeHashInResourceName ? '-${substring(uniqueStr, 0, 4)}' : '')}')
+
+var location = resourceGroup().location
 
 module storageResources './storage.bicep' = {
   name: 'Storage_Resources'
