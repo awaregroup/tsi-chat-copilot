@@ -1,4 +1,10 @@
-**NOTE**: This is a **sample** application to help you understand how Semantic Kernel and AI can work in Web Applications. This sample is **NOT FOR PRODUCTION** deployments.
+# tsi-chat-copilot
+
+This template is a fork of the existing [microsoft/chatcopilot](https://github.com/microsoft/chatcopilot) sample project. Additions have been made to support custom theming through Azure App Settings, managed identity for all services (except Speech), repeatable single package deployment and all new bicep templates that require minimal setup.
+
+[**Click here**](./AWARE-SETUP.md) for installation instructions.
+
+-------
 
 # Chat Copilot Sample Application
 
