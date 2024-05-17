@@ -11,6 +11,7 @@ import { BackendProbe, ChatView, Error, Loading, Login } from './components/view
 import { AuthHelper } from './libs/auth/AuthHelper';
 import { useChat, useFile } from './libs/hooks';
 import { AlertType } from './libs/models/AlertType';
+import { UxConfig } from './libs/ux/UxHelper';
 import { useAppDispatch, useAppSelector } from './redux/app/hooks';
 import { RootState } from './redux/app/store';
 import { FeatureKeys } from './redux/features/app/AppState';
@@ -38,6 +39,29 @@ export const useClasses = makeStyles({
         justifyContent: 'space-between',
         width: '100%',
     },
+    headerTitleContainer: {
+        display: 'flex',
+        alignItems: 'left',
+        // marginTop: '-5px',
+        paddingLeft: tokens.spacingVerticalSNudge
+    },
+    headerText: {
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: tokens.fontSizeBase500,
+        fontWeight: tokens.fontWeightRegular,
+        // marginTop: '9px',
+        paddingLeft: '5px',
+    },
+    headerLogo: {
+        paddingLeft: '5px',
+        paddingRight: '10px',
+        height: '30px',
+        maxWidth: '400px',
+        display: 'flex',
+        backgroundSize: 'contain',
+        ...shorthands.borderRadius('4px'),
+    },
     persona: {
         marginRight: tokens.spacingHorizontalXXL,
     },
@@ -64,7 +88,7 @@ const App = () => {
     const dispatch = useAppDispatch();
 
     const { instance, inProgress } = useMsal();
-    const { features, isMaintenance } = useAppSelector((state: RootState) => state.app);
+    const { features, isMaintenance, uxConfig } = useAppSelector((state: RootState) => state.app);
     const isAuthenticated = useIsAuthenticated();
 
     const chat = useChat();
@@ -131,7 +155,39 @@ const App = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [instance, inProgress, isAuthenticated, appState, isMaintenance]);
 
-    const content = <Chat classes={classes} appState={appState} setAppState={setAppState} />;
+    useEffect(() => {
+        //web page title
+        if (uxConfig.pageTitle) {
+            document.title = uxConfig.pageTitle;
+        }
+
+        //favicon
+        if (uxConfig.faviconUrl) {
+            let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+
+            link.href = uxConfig.faviconUrl;
+        }
+
+        //brand colors
+        if (uxConfig.primaryColor && uxConfig.primaryColor.length > 0) {
+            semanticKernelLightTheme.colorBrandForeground1 = uxConfig.primaryColor;
+            semanticKernelLightTheme.colorBrandForeground2 = uxConfig.primaryColor;
+            semanticKernelDarkTheme.colorBrandForeground1 = uxConfig.primaryColor;
+            semanticKernelDarkTheme.colorBrandForeground2 = uxConfig.primaryColor;
+        }
+
+        if (uxConfig.headerTextColor && uxConfig.headerTextColor.length > 0) {
+            semanticKernelLightTheme.colorNeutralForegroundOnBrand = uxConfig.headerTextColor;
+            semanticKernelDarkTheme.colorNeutralForegroundOnBrand = uxConfig.headerTextColor;
+        }
+    }, [uxConfig]);
+
+    const content = <Chat classes={classes} appState={appState} setAppState={setAppState} uxConfig={uxConfig} />;
     return (
         <FluentProvider
             className="app-container"
@@ -142,7 +198,7 @@ const App = () => {
                     <UnauthenticatedTemplate>
                         <div className={classes.container}>
                             <div className={classes.header}>
-                                <Subtitle1 as="h1">Chat Copilot</Subtitle1>
+                                <Subtitle1 as="h1">{uxConfig.applicationName}</Subtitle1>
                             </div>
                             {appState === AppState.SigningOut && <Loading text="Signing you out..." />}
                             {appState !== AppState.SigningOut && <Login />}
@@ -161,28 +217,34 @@ const Chat = ({
     classes,
     appState,
     setAppState,
+    uxConfig
 }: {
     classes: ReturnType<typeof useClasses>;
     appState: AppState;
     setAppState: (state: AppState) => void;
+    uxConfig: UxConfig;
 }) => {
     const onBackendFound = React.useCallback(() => {
         setAppState(
             AuthHelper.isAuthAAD()
                 ? // if AAD is enabled, we need to set the active account before loading chats
-                  AppState.SettingUserInfo
+                AppState.SettingUserInfo
                 : // otherwise, we can load chats immediately
-                  AppState.LoadingChats,
+                AppState.LoadingChats,
         );
     }, [setAppState]);
     return (
         <div className={classes.container}>
             <div className={classes.header}>
-                <Subtitle1 as="h1">Chat Copilot</Subtitle1>
+                <div className={classes.headerTitleContainer}>
+                    {uxConfig.pageLogoUrl ? <><img className={classes.headerLogo} src={uxConfig.pageLogoUrl}  /></> : null}
+
+                    {uxConfig.applicationNameVisible ? <div className={classes.headerText}>{uxConfig.applicationName}</div> : null}
+                </div>
                 {appState > AppState.SettingUserInfo && (
                     <div className={classes.cornerItems}>
                         <div className={classes.cornerItems}>
-                            <PluginGallery />
+                            {uxConfig.pluginGalleryVisible ? <PluginGallery /> : null}
                             <UserSettingsMenu
                                 setLoadingState={() => {
                                     setAppState(AppState.SigningOut);

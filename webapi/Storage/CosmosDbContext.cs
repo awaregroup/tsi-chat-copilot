@@ -5,7 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Azure.Identity;
+using CopilotChat.WebApi.Models.Storage;
 using Microsoft.Azure.Cosmos;
+using RabbitMQ.Client.Logging;
 
 namespace CopilotChat.WebApi.Storage;
 
@@ -22,15 +25,18 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
     /// <summary>
     /// CosmosDB container.
     /// </summary>
-    private readonly Container _container;
+#pragma warning disable CA1051 // Do not declare visible instance fields
+    protected readonly Container _container;
+#pragma warning restore CA1051 // Do not declare visible instance fields
 
     /// <summary>
     /// Initializes a new instance of the CosmosDbContext class.
     /// </summary>
-    /// <param name="connectionString">The CosmosDB connection string.</param>
+    /// <param name="connectionDetail">The CosmosDB connection string or endpoint url. Value depends on isManagedIdentity being set.</param>
     /// <param name="database">The CosmosDB database name.</param>
     /// <param name="container">The CosmosDB container name.</param>
-    public CosmosDbContext(string connectionString, string database, string container)
+    /// <param name="isManagedIdentity">Whether or not to authenticate using Managed Identity or a Connection String.</param>
+    public CosmosDbContext(string connectionDetail, string database, string container, bool isManagedIdentity = true)
     {
         // Configure JsonSerializerOptions
         var options = new CosmosClientOptions
@@ -40,7 +46,17 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
             },
         };
-        this._client = new CosmosClient(connectionString, options);
+
+        //handle auth type
+        if (isManagedIdentity == true)
+        {
+            this._client = new CosmosClient(connectionDetail, new DefaultAzureCredential(), options);
+        }
+        else
+        {
+            this._client = new CosmosClient(connectionDetail, options);
+        }
+
         this._container = this._client.GetContainer(database, container);
     }
 
@@ -56,7 +72,7 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
     {
         if (string.IsNullOrWhiteSpace(entity.Id))
         {
-            throw new ArgumentOutOfRangeException(nameof(entity.Id), "Entity Id cannot be null or empty.");
+            throw new ArgumentOutOfRangeException(nameof(entity), "Entity Id cannot be null or empty.");
         }
 
         await this._container.CreateItemAsync(entity, new PartitionKey(entity.Partition));
@@ -67,7 +83,7 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
     {
         if (string.IsNullOrWhiteSpace(entity.Id))
         {
-            throw new ArgumentOutOfRangeException(nameof(entity.Id), "Entity Id cannot be null or empty.");
+            throw new ArgumentOutOfRangeException(nameof(entity), "Entity Id cannot be null or empty.");
         }
 
         await this._container.DeleteItemAsync<T>(entity.Id, new PartitionKey(entity.Partition));
@@ -97,7 +113,7 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
     {
         if (string.IsNullOrWhiteSpace(entity.Id))
         {
-            throw new ArgumentOutOfRangeException(nameof(entity.Id), "Entity Id cannot be null or empty.");
+            throw new ArgumentOutOfRangeException(nameof(entity), "Entity Id cannot be null or empty.");
         }
 
         await this._container.UpsertItemAsync(entity, new PartitionKey(entity.Partition));
@@ -115,5 +131,31 @@ public class CosmosDbContext<T> : IStorageContext<T>, IDisposable where T : ISto
         {
             this._client.Dispose();
         }
+    }
+}
+
+/// <summary>
+/// Specialization of CosmosDbContext<T> for CopilotChatMessage.
+/// </summary>
+public class CosmosDbCopilotChatMessageContext : CosmosDbContext<CopilotChatMessage>, ICopilotChatMessageStorageContext
+{
+    /// <summary>
+    /// Initializes a new instance of the CosmosDbCopilotChatMessageContext class.
+    /// </summary>
+    /// <param name="connectionDetail">The CosmosDB connection string or endpoint url. Value depends on isManagedIdentity being set.</param>
+    /// <param name="database">The CosmosDB database name.</param>
+    /// <param name="container">The CosmosDB container name.</param>
+    /// <param name="isManagedIdentity">Whether or not to authenticate using Managed Identity or a Connection String.</param>
+    public CosmosDbCopilotChatMessageContext(string connectionDetail, string database, string container, bool isManagedIdentity = true) :
+        base(connectionDetail, database, container, isManagedIdentity)
+    {
+    }
+
+    /// <inheritdoc/>
+    public Task<IEnumerable<CopilotChatMessage>> QueryEntitiesAsync(Func<CopilotChatMessage, bool> predicate, int skip, int count)
+    {
+        return Task.Run<IEnumerable<CopilotChatMessage>>(
+                () => this._container.GetItemLinqQueryable<CopilotChatMessage>(true)
+                        .Where(predicate).OrderByDescending(m => m.Timestamp).Skip(skip).Take(count).AsEnumerable());
     }
 }

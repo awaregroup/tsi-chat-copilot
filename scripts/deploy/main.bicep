@@ -37,9 +37,6 @@ param completionModel string = 'gpt-35-turbo'
 @description('Model to use for text embeddings')
 param embeddingModel string = 'text-embedding-ada-002'
 
-@description('Completion model the task planner should use')
-param plannerModel string = 'gpt-35-turbo'
-
 @description('Azure OpenAI endpoint to use (Azure OpenAI only)')
 param aiEndpoint string = ''
 
@@ -47,16 +44,16 @@ param aiEndpoint string = ''
 @description('Azure OpenAI or OpenAI API key')
 param aiApiKey string
 
-@description('Azure AD client ID for the backend web API')
+@description('Azure Entra client ID for the backend web API')
 param webApiClientId string
 
-@description('Azure AD client ID for the frontend')
+@description('Azure Entra client ID for the frontend app registration')
 param frontendClientId string
 
-@description('Azure AD tenant ID for authenticating users')
+@description('Azure Entra tenant ID for authenticating users')
 param azureAdTenantId string
 
-@description('Azure AD cloud instance for authenticating users')
+@description('Azure Entra cloud instance for authenticating users')
 param azureAdInstance string = environment().authentication.loginEndpoint
 
 @description('Whether to deploy a new Azure OpenAI instance')
@@ -67,10 +64,10 @@ param deployCosmosDB bool = true
 
 @description('What method to use to persist embeddings')
 @allowed([
-  'AzureCognitiveSearch'
+  'AzureAISearch'
   'Qdrant'
 ])
-param memoryStore string = 'AzureCognitiveSearch'
+param memoryStore string = 'AzureAISearch'
 
 @description('Whether to deploy Azure Speech Services to enable input by voice')
 param deploySpeechServices bool = true
@@ -207,10 +204,6 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
           value: 'access_as_user'
         }
         {
-          name: 'Planner:Model'
-          value: plannerModel
-        }
-        {
           name: 'ChatStore:Type'
           value: deployCosmosDB ? 'cosmos' : 'volatile'
         }
@@ -311,11 +304,11 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
           value: aiService
         }
         {
-          name: 'KernelMemory:DataIngestion:VectorDbTypes:0'
+          name: 'KernelMemory:DataIngestion:MemoryDbTypes:0'
           value: memoryStore
         }
         {
-          name: 'KernelMemory:Retrieval:VectorDbType'
+          name: 'KernelMemory:Retrieval:MemoryDbType'
           value: memoryStore
         }
         {
@@ -343,16 +336,16 @@ resource appServiceWebConfig 'Microsoft.Web/sites/config@2022-09-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
         }
         {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:Auth'
+          name: 'KernelMemory:Services:AzureAISearch:Auth'
           value: 'ApiKey'
         }
         {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:Endpoint'
-          value: memoryStore == 'AzureCognitiveSearch' ? 'https://${azureCognitiveSearch.name}.search.windows.net' : ''
+          name: 'KernelMemory:Services:AzureAISearch:Endpoint'
+          value: memoryStore == 'AzureAISearch' ? 'https://${azureAISearch.name}.search.windows.net' : ''
         }
         {
-          name: 'KernelMemory:Services:AzureCognitiveSearch:APIKey'
-          value: memoryStore == 'AzureCognitiveSearch' ? azureCognitiveSearch.listAdminKeys().primaryKey : ''
+          name: 'KernelMemory:Services:AzureAISearch:APIKey'
+          value: memoryStore == 'AzureAISearch' ? azureAISearch.listAdminKeys().primaryKey : ''
         }
         {
           name: 'KernelMemory:Services:Qdrant:Endpoint'
@@ -480,7 +473,7 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
         value: aiService
       }
       {
-        name: 'KernelMemory:ImageOcrType'
+        name: 'KernelMemory:DataIngestion:ImageOcrType'
         value: 'AzureFormRecognizer'
       }
       {
@@ -496,11 +489,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
         value: aiService
       }
       {
-        name: 'KernelMemory:DataIngestion:VectorDbTypes:0'
+        name: 'KernelMemory:DataIngestion:MemoryDbTypes:0'
         value: memoryStore
       }
       {
-        name: 'KernelMemory:Retrieval:VectorDbType'
+        name: 'KernelMemory:Retrieval:MemoryDbType'
         value: memoryStore
       }
       {
@@ -528,16 +521,16 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
         value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[1].value}'
       }
       {
-        name: 'KernelMemory:Services:AzureCognitiveSearch:Auth'
+        name: 'KernelMemory:Services:AzureAISearch:Auth'
         value: 'ApiKey'
       }
       {
-        name: 'KernelMemory:Services:AzureCognitiveSearch:Endpoint'
-        value: memoryStore == 'AzureCognitiveSearch' ? 'https://${azureCognitiveSearch.name}.search.windows.net' : ''
+        name: 'KernelMemory:Services:AzureAISearch:Endpoint'
+        value: memoryStore == 'AzureAISearch' ? 'https://${azureAISearch.name}.search.windows.net' : ''
       }
       {
-        name: 'KernelMemory:Services:AzureCognitiveSearch:APIKey'
-        value: memoryStore == 'AzureCognitiveSearch' ? azureCognitiveSearch.listAdminKeys().primaryKey : ''
+        name: 'KernelMemory:Services:AzureAISearch:APIKey'
+        value: memoryStore == 'AzureAISearch' ? azureAISearch.listAdminKeys().primaryKey : ''
       }
       {
         name: 'KernelMemory:Services:Qdrant:Endpoint'
@@ -581,11 +574,11 @@ resource appServiceMemoryPipelineConfig 'Microsoft.Web/sites/config@2022-09-01' 
       }
       {
         name: 'KernelMemory:Services:AzureFormRecognizer:Endpoint'
-        value: ocrAccount.properties.endpoint
+        value: documentIntelligenceAccount.properties.endpoint
       }
       {
         name: 'KernelMemory:Services:AzureFormRecognizer:APIKey'
-        value: ocrAccount.listKeys().key1
+        value: documentIntelligenceAccount.listKeys().key1
       }
       {
         name: 'KernelMemory:Services:OpenAI:TextModel'
@@ -812,7 +805,7 @@ resource appServiceQdrant 'Microsoft.Web/sites@2022-09-01' = if (memoryStore == 
   }
 }
 
-resource azureCognitiveSearch 'Microsoft.Search/searchServices@2022-09-01' = if (memoryStore == 'AzureCognitiveSearch') {
+resource azureAISearch 'Microsoft.Search/searchServices@2022-09-01' = if (memoryStore == 'AzureAISearch') {
   name: 'acs-${uniqueName}'
   location: location
   sku: {
@@ -1118,7 +1111,7 @@ resource speechAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = if (d
   }
 }
 
-resource ocrAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
+resource documentIntelligenceAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
   name: 'cog-ocr-${uniqueName}'
   location: location
   sku: {

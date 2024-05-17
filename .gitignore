@@ -498,3 +498,5 @@ tmp/*
 # Custom plugins in default directories
 */Skills/NativePlugins
 */Skills/SemanticPlugins
+webapi/.config/dotnet-tools.json
+.devops/bicep/main.json

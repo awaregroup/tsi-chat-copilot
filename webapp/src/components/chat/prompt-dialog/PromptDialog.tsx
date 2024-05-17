@@ -38,7 +38,6 @@ const useClasses = makeStyles({
         ...shorthands.padding(0),
         ...shorthands.margin(0),
         minWidth: 'auto',
-        marginLeft: 'auto', // align to right
     },
     text: {
         width: '100%',
@@ -81,8 +80,8 @@ export const PromptDialog: React.FC<IPromptDialogProps> = ({ message }) => {
 
                     // Backend can be configured to return the raw response from Stepwise Planner. In this case, no meta prompt was generated or completed
                     // and we should show the Stepwise thought process as the raw content view.
-                    if ((prompt as BotResponsePrompt).metaPromptTemplate.length <= 0) {
-                        (prompt as BotResponsePrompt).rawView = (
+                    if (prompt.metaPromptTemplate.length <= 0) {
+                        prompt.rawView = (
                             <pre className={mergeClasses(dialogClasses.text, classes.text)}>
                                 {JSON.stringify(JSON.parse(details.stepsTaken), null, 2)}
                             </pre>
@@ -100,7 +99,7 @@ export const PromptDialog: React.FC<IPromptDialogProps> = ({ message }) => {
                 value &&
                 !(value as string).includes('User has also shared some document snippets:')
             ) {
-                value += '\nNo relevant document memories.';
+                value = (value as string) + '\nNo relevant document memories.';
             }
 
             return value && key !== 'metaPromptTemplate' ? (

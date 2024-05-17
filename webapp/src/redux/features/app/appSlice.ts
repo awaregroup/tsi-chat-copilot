@@ -5,6 +5,7 @@ import { Constants } from '../../../Constants';
 import { ServiceInfo } from '../../../libs/models/ServiceInfo';
 import { TokenUsage, TokenUsageFunctionNameMap } from '../../../libs/models/TokenUsage';
 import { ActiveUserInfo, Alert, AppState, FeatureKeys, initialState } from './AppState';
+import { UxConfig } from '../../../libs/ux/UxHelper';
 
 export const appSlice = createSlice({
     name: 'app',
@@ -74,6 +75,9 @@ export const appSlice = createSlice({
         setAuthConfig: (state: AppState, action: PayloadAction<AppState['authConfig']>) => {
             state.authConfig = action.payload;
         },
+        setUxConfig: (state: AppState, action: PayloadAction<UxConfig>) => {
+            state.uxConfig = action.payload;
+        },
     },
 });
 
@@ -88,6 +92,7 @@ export const {
     setServiceInfo,
     setMaintenance,
     setAuthConfig,
+    setUxConfig,
 } = appSlice.actions;
 
 export default appSlice.reducer;

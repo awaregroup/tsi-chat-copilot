@@ -1,0 +1,132 @@
+trigger:
+  branches:
+    include:
+    - main
+    - prod
+
+parameters:
+  - name: environmentName
+    type: string
+  - name: serviceConnectionName
+    type: string
+
+variables:
+- group: ${{ lower(parameters.environmentName) }}-variable-group
+- name: applicationRole
+  value: 'memorypipeline'
+
+stages:
+- stage: 'Build'
+  condition: always()
+
+  variables:
+  - name: sourcePath
+    value: 'memorypipeline'
+  - name: sourceFolder
+    value: '$(Build.SourcesDirectory)/$(sourcePath)'
+  - name: dotnetVersion
+    value: '6.x'
+
+  jobs:
+  - job: 'Build'
+    displayName: 'Build: ${{ variables.applicationRole }}'
+
+    pool:
+      vmImage: 'windows-latest'
+      
+    steps:
+    #don't clean to cache the node_modules and potentially nuget packages
+    - checkout: self
+      clean: false 
+
+    #set pipeline variables based on git hash and date
+    - script: |
+          set mydate=%date:~10,4%%date:~7,2%%date:~4,2%
+          for /F "tokens=*" %%g in ('git rev-parse --short HEAD') do (set hash=%%g)
+          echo ##vso[task.setvariable variable=ShortCommitHash;]%hash%
+          echo ##vso[task.setvariable variable=OutputPrefix;]%mydate%-%hash%
+          echo ##vso[task.setvariable variable=ArtifactDir;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole)
+          echo ##vso[task.setvariable variable=ArtifactArchive;]$(Build.ArtifactStagingDirectory)/%mydate%-%hash%-$(applicationRole).zip
+      workingDirectory: '$(Build.SourcesDirectory)'
+      displayName: 'Set pipeline variables'
+
+    #install correct .net sdk version
+    - task: UseDotNet@2
+      displayName: 'Install .NET $(dotnetVersion) SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '$(dotnetVersion)'
+
+    #build project
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Build $(applicationRole) project'
+      inputs:
+        command: 'publish'
+        projects: '$(sourceFolder)/*.csproj'
+        workingDirectory: '$(sourceFolder)'
+        arguments: '--configuration Release -r win-x64 --self-contained true --output $(ArtifactDir)'
+        publishWebProjects: false
+        zipAfterPublish: false
+
+    #we use build rather than publish above to give more flexibility on the output archive name
+    #now we build the archive
+    - task: ArchiveFiles@2
+      displayName: 'Create artifact ZIP file'
+      inputs:
+        rootFolderOrFile: '$(ArtifactDir)/$(sourcePath)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(ArtifactArchive)'
+        replaceExistingArchive: true
+        verbose: true
+
+    - powershell: Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/' -Recurse
+
+    #publish artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish artifacts'
+      inputs:
+        pathtoPublish: '$(ArtifactArchive)'
+        artifactName: 'drop'
+
+
+- stage: 'Deploy'
+  condition: succeeded()
+
+  jobs:
+  - job: 'Deploy'
+    displayName: 'Deploy: ${{ variables.applicationRole }}'
+
+    pool:
+      vmImage: 'windows-latest'
+
+    steps:
+    - checkout: none
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        targetPath: '$(Pipeline.Workspace)'
+
+    - task: AzurePowerShell@5
+      displayName: 'Find $(applicationRole) resource name'
+      inputs:
+        azureSubscription: ${{parameters.serviceConnectionName}}
+        ScriptType: 'InlineScript'
+        Inline: |
+          $webapp = Get-AzResource -ResourceType 'Microsoft.Web/sites' -ResourceGroupName '$(RESOURCE_GROUP_NAME)' -Tag @{'applicationRole'='$(applicationRole)'}
+          Write-Output $webapp
+          If ($webapp -eq $null) { throw 'Could not find WebApp with tag: applicationRole:$(applicationRole)'}
+          $webappname = $webapp.Name
+          Write-Host "##vso[task.setvariable variable=TargetResourceName;]$webappname"
+        preferredAzurePowerShellVersion: '3.1.0'
+
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        azureSubscription: ${{parameters.serviceConnectionName}}
+        ConnectionType: 'AzureRM'
+        appType: 'webApp'
+        WebAppName: '$(TargetResourceName)'
+        packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+        AppSettings: '-WEBSITE_RUN_FROM_PACKAGE 1'

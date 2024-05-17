@@ -19,7 +19,7 @@ public sealed class FrontendOptions
     /// Override the default page titles and behaviour
     /// </summary>
     public string PageTitle { get; set; } = "Enterprise Copilot";
-    public string ApplicationName { get; set; } = "Copilot Chat";
+    public string ApplicationName { get; set; } = "Chat Copilot";
     public bool ApplicationNameVisible { get; set; } = true;
     public string CopilotName { get; set; } = "Copilot";
 
@@ -29,6 +29,7 @@ public sealed class FrontendOptions
     /// </summary>
     public string PrimaryColor { get; set; } = "#A53E63";
     public string SecondaryColor { get; set; } = "#A53E63";
+    public string HeaderTextColor { get; set; } = "#FFFFFF";
 
     /// <summary>
     /// Graphics / logos
@@ -53,4 +54,8 @@ public sealed class FrontendOptions
     public bool GlobalDocumentsVisible { get; set; } = true;
     public bool PlansTabVisible { get; set; } = true;
     public bool ChatHistoryVisible { get; set; } = true;
+    public bool PluginGalleryVisible { get; set; } = true;
+    public bool UserSettingsVisible { get; set; } = true;
+    public bool PersonasTabVisible { get; set; } = true;
+    public bool PromptDetailVisible { get; set; } = true;
 }

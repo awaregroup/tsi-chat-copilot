@@ -1,4 +1,10 @@
-**NOTE**: This is a **sample** application to help you understand how Semantic Kernel and AI can work in Web Applications. This sample is **NOT FOR PRODUCTION** deployments.
+# tsi-chat-copilot
+
+This template is a fork of the existing [microsoft/chatcopilot](https://github.com/microsoft/chatcopilot) sample project. Additions have been made to support custom theming through Azure App Settings, managed identity for all services (except Speech), repeatable single package deployment and all new bicep templates that require minimal setup.
+
+[Click here](./docs/AWARE-SETUP.md) for installation instructions.
+
+-------
 
 # Chat Copilot Sample Application
 
@@ -69,10 +75,8 @@ You will need the following items to run the sample:
    - > **IMPORTANT:** For `AzureOpenAI`, if you deployed models `gpt-35-turbo` and `text-embedding-ada-002` with custom names (instead of the default names), also use the parameters:
 
      ```powershell
-     -CompletionModel {DEPLOYMENT_NAME} -EmbeddingModel {DEPLOYMENT_NAME} -PlannerModel {DEPLOYMENT_NAME}
+     -CompletionModel {DEPLOYMENT_NAME} -EmbeddingModel {DEPLOYMENT_NAME}
      ```
-
-     > -PlannerModel name will be the same as -CompletionModel
 
      Open the `.\Configure.ps1` script to see all of the available parameters.
 
@@ -153,11 +157,8 @@ You will need the following items to run the sample:
                      --endpoint        {AZURE_OPENAI_ENDPOINT} \
                      --apikey          {API_KEY} \
                      --completionmodel {DEPLOYMENT_NAME} \
-                     --plannermodel    {DEPLOYMENT_NAME} \
                      --embeddingmodel  {DEPLOYMENT_NAME}
       ```
-
-      `--plannermodel` will be the same name as `--completionmodel`
 
 1. Run Chat Copilot locally. This step starts both the backend API and frontend application.
 

@@ -109,6 +109,7 @@ public class ServiceInfoController : ControllerBase
     [Route("uxConfig")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [AllowAnonymous]
     public IActionResult GetUserExperienceConfig()
     {
         var response = new FrontendUxConfig()
@@ -119,6 +120,7 @@ public class ServiceInfoController : ControllerBase
             CopilotName = this._frontendOptions.CopilotName,
             PrimaryColor = this._frontendOptions.PrimaryColor,
             SecondaryColor = this._frontendOptions.SecondaryColor,
+            HeaderTextColor = this._frontendOptions.HeaderTextColor,
             PageLogoUrl = this._frontendOptions.PageLogoUrl,
             FaviconUrl = this._frontendOptions.FaviconUrl,
             CopilotAvatarUrl = this._frontendOptions.CopilotAvatarUrl,
@@ -127,7 +129,11 @@ public class ServiceInfoController : ControllerBase
             DocumentsTabVisible = this._frontendOptions.DocumentsTabVisible,
             GlobalDocumentsVisible = this._frontendOptions.GlobalDocumentsVisible,
             PlansTabVisible = this._frontendOptions.PlansTabVisible,
-            ChatHistoryVisible = this._frontendOptions.ChatHistoryVisible
+            PersonasTabVisible = this._frontendOptions.PersonasTabVisible,
+            PromptDetailVisible = this._frontendOptions.PromptDetailVisible,
+            ChatHistoryVisible = this._frontendOptions.ChatHistoryVisible,
+            PluginGalleryVisible = this._frontendOptions.PluginGalleryVisible,
+            UserSettingsVisible = this._frontendOptions.UserSettingsVisible,
         };
 
         return this.Ok(response);

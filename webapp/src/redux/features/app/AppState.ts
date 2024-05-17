@@ -5,6 +5,7 @@ import { AlertType } from '../../../libs/models/AlertType';
 import { IChatUser } from '../../../libs/models/ChatUser';
 import { ServiceInfo } from '../../../libs/models/ServiceInfo';
 import { TokenUsage } from '../../../libs/models/TokenUsage';
+import { UxConfig } from '../../../libs/ux/UxHelper';
 
 // This is the default user information when authentication is set to 'None'.
 // It must match what is defined in PassthroughAuthenticationHandler.cs on the backend.
@@ -59,6 +60,7 @@ export interface AppState {
     settings: Setting[];
     serviceInfo: ServiceInfo;
     isMaintenance: boolean;
+    uxConfig: UxConfig;
 }
 
 export enum FeatureKeys {
@@ -66,7 +68,7 @@ export enum FeatureKeys {
     SimplifiedExperience,
     PluginsPlannersAndPersonas,
     AzureContentSafety,
-    AzureCognitiveSearch,
+    AzureAISearch,
     BotAsDocs,
     MultiUserChat,
     RLHF, // Reinforcement Learning from Human Feedback
@@ -91,9 +93,9 @@ export const Features = {
         label: 'Azure Content Safety',
         inactive: true,
     },
-    [FeatureKeys.AzureCognitiveSearch]: {
+    [FeatureKeys.AzureAISearch]: {
         enabled: false,
-        label: 'Azure Cognitive Search',
+        label: 'Azure AI Search',
         inactive: true,
     },
     [FeatureKeys.BotAsDocs]: {
@@ -127,7 +129,7 @@ export const Settings = [
     },
     {
         title: 'Azure AI',
-        features: [FeatureKeys.AzureContentSafety, FeatureKeys.AzureCognitiveSearch],
+        features: [FeatureKeys.AzureContentSafety, FeatureKeys.AzureAISearch],
         stackVertically: true,
     },
     {
@@ -141,6 +143,7 @@ export const initialState: AppState = {
     alerts: [],
     activeUserInfo: DefaultActiveUserInfo,
     authConfig: {} as AuthConfig,
+    uxConfig: {} as UxConfig,
     tokenUsage: {},
     features: Features,
     settings: Settings,

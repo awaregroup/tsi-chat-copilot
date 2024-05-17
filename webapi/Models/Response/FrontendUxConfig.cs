@@ -31,6 +31,9 @@ public class FrontendUxConfig
     [JsonPropertyName("secondaryColor")]
     public string SecondaryColor { get; set; }
 
+    [JsonPropertyName("headerTextColor")]
+    public string HeaderTextColor { get; set; }
+
     /// <summary>
     /// Graphics / logos
     /// </summary>
@@ -69,4 +72,15 @@ public class FrontendUxConfig
 
     [JsonPropertyName("chatHistoryVisible")]
     public bool ChatHistoryVisible { get; set; }
+
+    [JsonPropertyName("pluginGalleryVisible")]
+    public bool PluginGalleryVisible { get; set; }
+
+    [JsonPropertyName("personasTabVisible")]
+    public bool PersonasTabVisible { get; set; }
+
+    [JsonPropertyName("promptDetailVisible")]
+    public bool PromptDetailVisible { get; set; }
+    [JsonPropertyName("userSettingsVisible")]
+    public bool UserSettingsVisible { get; set; }
 }
