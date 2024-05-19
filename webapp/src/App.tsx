@@ -162,7 +162,7 @@ const App = () => {
         }
 
         //favicon
-        if (uxConfig.faviconUrl) {
+        if (uxConfig.faviconUrl && uxConfig.faviconUrl.length > 0) {
             let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
             if (!link) {
                 link = document.createElement('link');
@@ -237,7 +237,7 @@ const Chat = ({
         <div className={classes.container}>
             <div className={classes.header}>
                 <div className={classes.headerTitleContainer}>
-                    {uxConfig.pageLogoUrl ? <><img className={classes.headerLogo} src={uxConfig.pageLogoUrl}  /></> : null}
+                    {uxConfig.pageLogoUrl && uxConfig.pageLogoUrl.length > 0 ? <><img className={classes.headerLogo} src={uxConfig.pageLogoUrl}  /></> : null}
 
                     {uxConfig.applicationNameVisible ? <div className={classes.headerText}>{uxConfig.applicationName}</div> : null}
                 </div>

@@ -76,7 +76,7 @@ export const useChat = () => {
         if (id === `${chatId}-bot` || id.toLocaleLowerCase() === 'bot') {
             const profile = Constants.bot.profile;
             profile.fullName = uxConfig.copilotName;
-            if (uxConfig.copilotAvatarUrl) { profile.photo = uxConfig.copilotAvatarUrl; }
+            if (uxConfig.copilotAvatarUrl && uxConfig.copilotAvatarUrl.length > 0) { profile.photo = uxConfig.copilotAvatarUrl; }
             return profile;
         }
         return users.find((user) => user.id === id);
@@ -267,7 +267,7 @@ export const useChat = () => {
     };
 
     const getBotProfilePicture = (index: number): string => {
-        return uxConfig.copilotAvatarUrl.length > 0 ? uxConfig.copilotAvatarUrl : botProfilePictures[index % botProfilePictures.length];
+        return (uxConfig.copilotAvatarUrl && uxConfig.copilotAvatarUrl.length > 0) ? uxConfig.copilotAvatarUrl : botProfilePictures[index % botProfilePictures.length];
     };
 
     const getChatMemorySources = async (chatId: string) => {
