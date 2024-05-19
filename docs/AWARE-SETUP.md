@@ -348,7 +348,7 @@ Linking the frontend to the backend
 ```json
 {
   "name": "Frontend__applicationName",
-  "value": "Aged Care Copilot"
+  "value": "TSI Chat Copilot"
 },
 {
   "name": "Frontend__applicationNameVisible",
@@ -357,6 +357,10 @@ Linking the frontend to the backend
 {
   "name": "Frontend__copilotName",
   "value": "Aware"
+},
+{
+  "name": "Frontend__copilotAvatarUrl",
+  "value": "https://awaretsi.blob.core.windows.net/assets/aware_favicon.png"
 },
 {
   "name": "Frontend__documentsTabVisible",
@@ -376,7 +380,7 @@ Linking the frontend to the backend
 },
 {
   "name": "Frontend__pageTitle",
-  "value": "Aged Care Copilot"
+  "value": "TSI Chat Copilot"
 },
 {
   "name": "Frontend__plansTabVisible",
