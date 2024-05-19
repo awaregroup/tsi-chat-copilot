@@ -1,6 +1,6 @@
 # tsi-chat-copilot
 
-This template is a fork of the existing [microsoft/chatcopilot](https://github.com/microsoft/chatcopilot) sample project. Additions have been made to support custom theming through Azure App Settings, managed identity for all services (except Speech), repeatable single package deployment and all new bicep templates that require minimal setup.
+In partnership between the Tech for Social Impact team at Microsoft and Aware, this template provides an easily deployable chat solution targeted for non-profit customers. It based on the [microsoft/chatcopilot](https://github.com/microsoft/chatcopilot) project. Additions have been made to support custom theming through Azure App Settings, managed identity for all services (except Speech), repeatable single package deployment and all new bicep templates that require minimal setup.
 
 [Click here](./docs/AWARE-SETUP.md) for installation instructions.
 
